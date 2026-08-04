@@ -1,6 +1,6 @@
 //! Parse command-line arguments.
 
-use std::{self, error};
+use std::error;
 
 use clap::{self, Command, Arg};
 
