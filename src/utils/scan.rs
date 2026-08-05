@@ -57,14 +57,6 @@ pub fn str2enum(name: &str) -> ItemType {
         other => panic!("fatal: unknown item name: {}", other),
     }
 }
-/// Convert Vec<&String> to Vec<ItemType>.
-fn str2enum_vec(vec: &Vec<&String>) -> Vec<ItemType> {
-    let mut res: Vec<ItemType> = Vec::new();
-    for str in vec {
-        res.push(str2enum(str));
-    }
-    res
-}
 
 /// Recursion function to scan files in current working directory.
 pub fn scan_cwd(
@@ -73,7 +65,10 @@ pub fn scan_cwd(
     items: &Vec<&String>
 ) -> Result<(), Box<dyn error::Error>> {
     let cwd = env::current_dir()?;
-    let items = str2enum_vec(&items);
+    let mut item: u64 = 0x0;
+    for it in items {
+        item |= str2enum(it) as u64;
+    }
 
     let mut exclude: Vec<String> = exclude.clone();
     let mut include: Vec<String> = Vec::new();
