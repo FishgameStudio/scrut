@@ -44,7 +44,7 @@ pub fn scan_files(
 pub enum ItemType {
     Secrets = 0x1,
     Evil = 0x2,
-    All = 0x100,
+    All = 0x1 | 0x2,
 }
 
 /// Match the list and convert to enum
@@ -108,13 +108,14 @@ pub fn scan_cwd(
         }
     }
 
+    //////// Main File Processer //////
     let action = |file: &String| -> Result<(), Box<dyn std::error::Error>> {
         // Check whether the file matches any pattern in the exclusion list.
         let is_excluded = exclude.iter().any(|rule| is_match(rule, file));
         if is_excluded && !include.contains(file) {
-            dbg!("File {} excluded", file);
+            println!("File {} excluded", file);
         } else {
-            dbg!("Processing file {} with items {:?}", file, items);
+            println!("Processing file {} with items {:?}", file, items);
 
             // Read file contents
             let bytes = fs::read(file)?;
@@ -124,8 +125,11 @@ pub fn scan_cwd(
                     // Match item
                     use ItemType::*;
                     if bit_mask(item, Secrets) {
-                        // API Token, passwords, etc.
+                        // API Tokens, passwords, etc.
                         scan_secrets(&s, file);
+                    } else if bit_mask(item, Evil) {
+                        // Evil scripts, logics, etc.
+                        todo!("No implementations of evil content scan.");
                     }
                 }
                 Err(e) => {
