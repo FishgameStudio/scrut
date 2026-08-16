@@ -76,7 +76,8 @@ impl<'a> Parser<'a> {
                     .short('e')
                     .long("exclude")
                     .help("Specify excluded files")
-                    .required(false),
+                    .required(false)
+                    .num_args(0..),
             )
             .arg(
                 Arg::new("scan-all")
