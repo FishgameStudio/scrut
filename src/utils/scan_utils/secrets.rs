@@ -83,7 +83,7 @@ pub fn scan_secrets(s: &String, filename: &String) -> i32 {
     // Password
     let passwords: Vec<Regex> = vec![
         Regex::new(r#"let password\s*=".*""#).unwrap(),
-        Regex::new(r"password").unwrap(),
+        Regex::new(r#"(password|passwd)\s*[:=]\s*["'][^"']+["']"#).unwrap(),
     ];
     let mut total_errors = 0;
     total_errors += diagnostic("Hard-coded token", &tokens, s, filename);
