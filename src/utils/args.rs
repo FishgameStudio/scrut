@@ -98,7 +98,11 @@ impl<'a> Parser<'a> {
             );
 
         // Add subcommands.
-        let root = root.subcommand(&version).subcommand(&scan).subcommand(&fix);
+        let root = root
+            .subcommand(&version)
+            .subcommand(&scan)
+            .subcommand(&fix)
+            .subcommand(&docs);
 
         Self {
             flags: flags,
