@@ -171,6 +171,7 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
                     // No item provided
                     let items: Vec<&String> = vec![&String::from("all")];
                     eprintln!("warning: No item provided, scanning all");
+                    scan_cwd(&exclude, scan_all, &vec![&"all".to_string()]);
                 }
                 Err(e) => {
                     // Error when parsing
