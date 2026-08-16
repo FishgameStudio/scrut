@@ -1,6 +1,7 @@
 //! Parse command-line arguments.
 
-use std::{error, ffi::OsStr};
+use std::path::Path;
+use std::{error, fs::exists};
 
 use clap::{self, Arg, Command};
 
@@ -115,7 +116,6 @@ impl<'a> Parser<'a> {
 /// Parse arguments and run their corresponding task.
 /// # Panics
 /// If no command provided or unknown command.
-#[allow(unused)]
 pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
     let matches = parser.root.clone().get_matches();
     if matches.get_flag("verbose") {
@@ -133,14 +133,21 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
         }
         Some(("docs", _)) => {
             // Command `docs`
-            const DOC_URL: &str = "file:///docs/index.html";
-            println!("Opening html page: {DOC_URL}");
-            match that(OsStr::new(DOC_URL)) {
-                Ok(()) => {
-                    println!("")
-                }
+            match exists("./docs/index.html") {
+                Ok(true) => {}
+                Ok(false) => panic!("fatal: Documentation html not found"),
+                Err(e) => panic!("fatal: Unable to access documentation html: {}", e),
+            }
+            let doc_path = Path::new("./docs/index.html").canonicalize().unwrap();
+            println!("Opening html page: {}", doc_path.to_str().unwrap());
+            match that(doc_path.as_os_str()) {
+                Ok(()) => {}
                 Err(e) => {
-                    panic!("Unable to open html page: {DOC_URL}")
+                    panic!(
+                        "fatal: Unable to open html page {}: {}",
+                        doc_path.to_str().unwrap(),
+                        e
+                    );
                 }
             }
         }
@@ -165,20 +172,20 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
                 Ok(Some(items)) => {
                     // Item provided
                     let items: Vec<&String> = items.collect();
-                    scan_cwd(&exclude, scan_all, &items);
+                    scan_cwd(&exclude, scan_all, &items)?;
                 }
                 Ok(None) => {
                     // No item provided
-                    let items: Vec<&String> = vec![&String::from("all")];
                     eprintln!("warning: No item provided, scanning all");
-                    scan_cwd(&exclude, scan_all, &vec![&"all".to_string()]);
+                    scan_cwd(&exclude, scan_all, &vec![&"all".to_string()])?;
                 }
                 Err(e) => {
                     // Error when parsing
-                    panic!("fatal: Error when parsing argument `item`")
+                    panic!("fatal: Error when parsing argument `item`: {}", e);
                 }
             }
         }
+        #[allow(unused)]
         Some(("fix", sub_matches)) => {
             // Command `fix`
             todo!("Implement command `fix`")
