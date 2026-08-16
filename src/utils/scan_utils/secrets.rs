@@ -4,6 +4,8 @@ use regex::Regex;
 
 use crate::utils::logging::verbose;
 
+use lazy_static::lazy_static;
+
 /// Match position metadata containing 1‑based line number, start and end byte offsets.
 #[derive(Debug)]
 pub struct MatchPos {
@@ -71,22 +73,26 @@ fn diagnostic(
     }
     err_cnt
 }
-/// Scan personal informations and secrets in file contents.
-pub fn scan_secrets(s: &String, filename: &String) -> i32 {
+
+lazy_static! {
     // API Token
-    let tokens: Vec<Regex> = vec![
+    static ref TOKEN_RULES: Vec<Regex> = vec![
         Regex::new(r"\w+_pat_[a-zA-Z0-9_\-]{30,85}").unwrap(),
         Regex::new(r"Bearer\s+(.+)").unwrap(),
         Regex::new(r#"let token\s*=\s*"\w+_pat_[a-zA-Z0-9_\-]{30,85}"\s*;"#).unwrap(),
         Regex::new(r#"let token\s*=\s*"Bearer\s+(.+)"\s*;"#).unwrap(),
     ];
     // Password
-    let passwords: Vec<Regex> = vec![
+    static ref PASSWORD_RULES: Vec<Regex> = vec![
         Regex::new(r#"let password\s*=".*""#).unwrap(),
         Regex::new(r#"(password|passwd)\s*[:=]\s*["'][^"']+["']"#).unwrap(),
     ];
+}
+
+/// Scan personal informations and secrets in file contents.
+pub fn scan_secrets(s: &String, filename: &String) -> i32 {
     let mut total_errors = 0;
-    total_errors += diagnostic("Hard-coded token", &tokens, s, filename);
-    total_errors += diagnostic("Hard-coded password", &passwords, s, filename);
+    total_errors += diagnostic("Hard-coded token", &*TOKEN_RULES, s, filename);
+    total_errors += diagnostic("Hard-coded password", &*PASSWORD_RULES, s, filename);
     total_errors
 }
