@@ -1,22 +1,22 @@
 //! Scan functions.
 
-use std::{self, env, error, fs};
+use std::{env, error, fs};
 
 use globset::Glob;
 
 use crate::utils::{logging::verbose, scan_utils::secrets::scan_secrets};
 
-/// Determine whether a file matches a wildcard syntax.
-fn is_match(pattern: &str, name: &str) -> bool {
-    let glob_res = Glob::new(pattern);
-    if let Err(_) = glob_res {
-        false
-    } else {
-        glob_res.unwrap().compile_matcher().is_match(name)
-    }
+/// Check if path matches glob pattern, input path should be unix‑style relative path.
+fn is_match(pattern: &str, rel_path: &str) -> bool {
+    let glob = match Glob::new(pattern) {
+        Ok(g) => g,
+        Err(_) => return false,
+    };
+    glob.compile_matcher().is_match(rel_path)
 }
 
-/// Recursion function to scan all files in specified directory.
+/// Recursively scan files inside given directory.
+/// Action receives absolute file path string.
 pub fn scan_files(
     action: &impl Fn(&String) -> Result<(), Box<dyn error::Error>>,
     directory: &String,
@@ -25,131 +25,140 @@ pub fn scan_files(
 
     for entry in entries {
         let entry = entry?;
-        let oss_name: std::ffi::OsString = entry.file_name();
-        let name = oss_name.to_string_lossy().into_owned();
-
         let path = entry.path();
+        let full_path = path.to_str().ok_or("Invalid UTF‑8 file path")?.to_string();
+
         if path.is_dir() {
-            // Directory -> recursion.
-            verbose!("Recursing directory: {}", path.to_str().unwrap());
-            scan_files(action, &name)?;
-        } else if entry.path().is_file() {
-            // File -> do specified action.
-            verbose!("Doing action for file: {}", path.to_str().unwrap());
-            action(&name)?;
+            verbose!("Recursing directory: {}", full_path);
+            scan_files(action, &full_path)?;
+        } else if path.is_file() {
+            verbose!("Processing file: {}", full_path);
+            action(&full_path)?;
         }
     }
-
     Ok(())
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum ItemType {
     Secrets = 0x1,
     Evil = 0x2,
     All = 0x1 | 0x2,
 }
 
-/// Match the list and convert to enum
-/// # Panics
-/// If item name does not match anyone enumerate.
-fn str2enum(name: &str) -> ItemType {
+/// Convert string argument to scan type enum.
+pub fn str2enum(name: &str) -> Result<ItemType, Box<dyn error::Error>> {
     match name {
-        "*" | "all" => ItemType::All,
-        "evil" => ItemType::Evil,
-        "secrets" => ItemType::Secrets,
-        other => panic!("fatal: unknown item name: {}", other),
+        "*" | "all" => Ok(ItemType::All),
+        "evil" => Ok(ItemType::Evil),
+        "secrets" => Ok(ItemType::Secrets),
+        other => Err(format!("unknown scan item name: {}", other).into()),
     }
 }
 
 #[inline]
-fn bit_mask(item: u64, target: ItemType) -> bool {
+pub fn bit_mask(item: u64, target: ItemType) -> bool {
     (item & target as u64) != 0
 }
 
-/// Recursion function to scan files in current working directory.
+/// Main scan entry, handle exclude patterns, .gitignore parsing and iterate scan roots.
 pub fn scan_cwd(
-    exclude: &Vec<String>,
+    exclude: &[String],
     scan_all: bool,
-    items: &Vec<&String>,
+    items: &[&String],
 ) -> Result<(), Box<dyn error::Error>> {
     let cwd = env::current_dir()?;
-    // Bit or
-    let mut item: u64 = 0x0;
+    let cwd_str = cwd
+        .to_str()
+        .ok_or("Current working directory has invalid UTF‑8 path")?;
+
+    let mut scan_mask: u64 = 0;
     for it in items {
-        item |= str2enum(it) as u64;
+        let tp = str2enum(it)?;
+        scan_mask |= tp as u64;
     }
 
-    let mut exclude: Vec<String> = exclude.clone();
-    let mut include: Vec<String> = Vec::new();
-    if exclude.is_empty() && !scan_all {
-        // Automatically generate excluding list by .gitignore.
-        // Read .gitignore if exists.
-        if fs::exists(".gitignore").is_err() {
-            eprintln!("warning: Skipping reading .gitignore because it doesn't exist.");
-            verbose!("skipping reading .gitignore: not found");
-        } else {
+    let mut exclude_patterns: Vec<String> = exclude.to_vec();
+    let mut include_patterns: Vec<String> = Vec::new();
+
+    if exclude_patterns.is_empty() && !scan_all {
+        if fs::exists(".gitignore")? {
             let bytes = fs::read(".gitignore")?;
             match String::from_utf8(bytes) {
-                Ok(s) => {
-                    let s = s.to_owned();
-                    // Traverse each line and skip comments.
-                    let lines = s.lines();
-                    for line in lines {
+                Ok(content) => {
+                    for line in content.lines() {
                         let line = line.trim();
-                        if line.starts_with("#") {
+                        if line.is_empty() || line.starts_with('#') {
                             continue;
-                        } else if line.starts_with("!") {
-                            include.push(line.strip_prefix("!").unwrap().to_string());
                         }
-                        exclude.push(line.replace("\\", "/").to_string());
+                        if let Some(stripped) = line.strip_prefix('!') {
+                            include_patterns.push(stripped.replace("\\", "/"));
+                        } else {
+                            exclude_patterns.push(line.replace("\\", "/"));
+                        }
                     }
                 }
                 Err(e) => {
-                    eprintln!("warning: Skipping reading .gitignore: {}", e);
-                    verbose!("skipping reading .gitignore: {}", e);
+                    eprintln!("warning: Failed to read .gitignore: {}", e);
                 }
             }
+        } else {
+            verbose!(".gitignore not found, skip loading ignore rules");
         }
     }
 
-    //////// Main File Processer //////
-    let action = |file: &String| -> Result<(), Box<dyn std::error::Error>> {
-        // Check whether the file matches any pattern in the exclusion list.
-        let is_excluded = exclude.iter().any(|rule| is_match(rule, file));
-        if is_excluded && !include.contains(file) {
-            println!("File {} excluded", file);
-            verbose!("Skipped excluded file {}", file);
-        } else {
-            println!("Processing file {} with items {:?}", file, items);
-            verbose!("Processing file {} with items {:?}", file, items);
+    let action = |full_file_path: &String| -> Result<(), Box<dyn error::Error>> {
+        let rel_path = full_file_path
+            .strip_prefix(cwd_str)
+            .ok_or("File path is outside working directory")?
+            .replace("\\", "/");
+        let rel_path = rel_path.strip_prefix('/').unwrap_or(&rel_path);
 
-            // Read file contents
-            let bytes = fs::read(file)?;
-            match String::from_utf8(bytes) {
-                Ok(s) => {
-                    let s = s.to_owned();
-                    // Match item
-                    use ItemType::*;
-                    if bit_mask(item, Secrets) {
-                        verbose!("Scanning secrets in file {}", file);
-                        // API Tokens, passwords, etc.
-                        scan_secrets(&s, file);
-                    }
-                    if bit_mask(item, Evil) {
-                        verbose!("Scanning evils in file {}", file);
-                        // Evil scripts, logics, etc.
-                        todo!("No implementations of evil content scan.");
-                    }
+        let mut excluded = exclude_patterns.iter().any(|rule| is_match(rule, rel_path));
+        if excluded {
+            let forced_include = include_patterns.iter().any(|inc| is_match(inc, rel_path));
+            if forced_include {
+                excluded = false;
+            }
+        }
+
+        if excluded {
+            println!("File {} excluded", rel_path);
+            verbose!("Skipped excluded file: {}", rel_path);
+            return Ok(());
+        }
+
+        println!("Processing file: {}", rel_path);
+        verbose!("Absolute file path: {}", full_file_path);
+
+        let bytes = fs::read(full_file_path)?;
+        match String::from_utf8(bytes) {
+            Ok(text) => {
+                use ItemType::*;
+                if bit_mask(scan_mask, Secrets) {
+                    verbose!("Running secrets scan on: {}", rel_path);
+                    scan_secrets(&text, full_file_path);
                 }
-                Err(e) => {
-                    eprintln!("warning: Skipping reading {}: {}", file, e);
-                    verbose!("Skipping reading {}: {}", file, e)
+                if bit_mask(scan_mask, Evil) {
+                    verbose!("Running evil‑pattern scan on: {}", rel_path);
+                    todo!("Evil content scan not implemented");
                 }
+            }
+            Err(e) => {
+                eprintln!("warning: Skip non‑utf8 file {}: {}", rel_path, e);
             }
         }
         Ok(())
     };
 
-    scan_files(&action, &cwd.to_string_lossy().to_string())
+    for scan_root in items {
+        if !fs::exists(scan_root)? {
+            eprintln!("error: Scan root path does not exist: {}", scan_root);
+            continue;
+        }
+        verbose!("Start scanning root: {}", scan_root);
+        scan_files(&action, scan_root)?;
+    }
+
+    Ok(())
 }
