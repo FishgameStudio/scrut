@@ -160,7 +160,7 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
                     panic!("fatal: Error when parsing argument `exclude`: {}", e);
                 }
             };
-            match matches.try_get_many::<String>("item") {
+            match sub_matches.try_get_many::<String>("item") {
                 Ok(Some(items)) => {
                     // Item provided
                     let items: Vec<&String> = items.collect();
@@ -179,6 +179,7 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
         }
         Some(("fix", sub_matches)) => {
             // Command `fix`
+            todo!("Implement command `fix`")
         }
         None => panic!("fatal: Must provide a command"),
         _ => panic!("fatal: Unknown command"),
