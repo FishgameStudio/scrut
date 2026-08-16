@@ -30,7 +30,7 @@ pub fn enable_verbose() -> std::io::Result<()> {
 
     let mut guard = LOG_FILE.lock().unwrap();
     if guard.is_none() {
-        let log_path = format!("{}/verbose.log", home_dir().unwrap().to_str().unwrap());
+        let log_path = format!("{}/scrut.log", home_dir().unwrap().to_str().unwrap());
         let file = OpenOptions::new()
             .create(true)
             .append(true)
