@@ -72,11 +72,9 @@ pub fn scan_secrets(s: &String, filename: &String) -> i32 {
     let tokens: Vec<Regex> = vec![
         Regex::new(r"\w+_pat_[a-zA-Z0-9_\-]{30,85}").unwrap(),
         Regex::new(r"[a-zA-Z0-9\-_]{32,128}").unwrap(),
-        Regex::new(r"[0-9a-fA-F]{32,64}").unwrap(),
         Regex::new(r"Bearer\s+(.+)").unwrap(),
         Regex::new(r#"let token\s*=\s*"\w+_pat_[a-zA-Z0-9_\-]{30,85}"\s*;"#).unwrap(),
         Regex::new(r#"let token\s*=\s*"[a-zA-Z0-9\-_]{32,128}"\s*;"#).unwrap(),
-        Regex::new(r#"let token\s*=\s*"[0-9a-fA-F]{32,64}"\s*;"#).unwrap(),
         Regex::new(r#"let token\s*=\s*"Bearer\s+(.+)"\s*;"#).unwrap(),
     ];
     // Password
