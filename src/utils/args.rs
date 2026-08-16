@@ -67,7 +67,8 @@ impl<'a> Parser<'a> {
             .arg(
                 Arg::new("item") // Positional argument
                     .help("Specify items to scan")
-                    .required(true),
+                    .required(false)
+                    .num_args(1..),
             )
             .arg(
                 Arg::new("exclude")
