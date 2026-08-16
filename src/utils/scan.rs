@@ -180,12 +180,13 @@ pub fn scan_cwd(
         verbose!("Processing absolute path: {}", full_abs);
 
         let bytes = fs::read(full_abs)?;
+        let mut issues: i32 = 0;
         match String::from_utf8(bytes) {
             Ok(text) => {
                 use ItemType::*;
                 if bit_mask(mask, Secrets) {
                     verbose!("Scanning secrets in file {}", rel);
-                    scan_secrets(&text, full_abs);
+                    issues += scan_secrets(&text, full_abs);
                 }
                 if bit_mask(mask, Evil) {
                     verbose!("Scanning evils in file {}", rel);
@@ -196,6 +197,14 @@ pub fn scan_cwd(
                 eprintln!("warning: Skipping reading {}: {}", rel, e);
                 verbose!("Skipping reading {}: {}", rel, e);
             }
+        }
+        if issues > 0 {
+            eprintln!("\nOh no!");
+            eprintln!("{issues} issues found.");
+            verbose!("{issues} issues found");
+        } else {
+            println!("No issue found!");
+            verbose!("No issue found");
         }
         Ok(())
     };
