@@ -1,0 +1,65 @@
+/* Default styles for documentation files. */
+
+
+body {
+    margin: 40px;
+    background: #222;
+}
+
+code {
+    /* Inline codes */
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 15px;
+    background: #555;
+    color: white;
+    margin: 0 2px 0 2px;
+    border-radius: 3px;
+}
+
+pre {
+    /* Code blocks */
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 15px;
+    background: #555;
+    color: lightgreen;
+    margin: 0 2px 0 2px;
+    border-radius: 3px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    /* Titles */
+    margin: 1.2em 0 0.6em 0;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    text-transform: uppercase;
+    color: white;
+}
+
+hr {
+    /* Dividing line */
+    border: 0;
+    height: 2px;
+    background: darkblue;
+    margin: 1em 0;
+}
+
+a {
+    /* Links */
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: white;
+    text-decoration: underline;
+}
+
+a:hover {
+    color: cornflowerblue;
+}
+
+* {
+    /* Default text */
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: white;
+}
