@@ -53,14 +53,19 @@ fn print_msg(prompt: &str, filename: &String, pos: &MatchPos, line_text: &str) -
     );
 }
 /// Traverse all given regex, get scaned error, print message and return number of messages.
-fn diagnostic(patterns: &Vec<Regex>, file_content: &String, filename: &String) -> i32 {
+fn diagnostic(
+    error_msg: &str,
+    patterns: &Vec<Regex>,
+    file_content: &String,
+    filename: &String,
+) -> i32 {
     let mut err_cnt = 0;
     for pattern in patterns {
         let mat = scan_matched(file_content, pattern);
         for pos in mat {
             let line_text = file_content.lines().collect::<Vec<_>>()[pos.line - 1];
             // Print error message
-            print_msg("Hard-coded token", filename, &pos, line_text);
+            print_msg(error_msg, filename, &pos, line_text);
             err_cnt += 1;
         }
     }
@@ -71,10 +76,8 @@ pub fn scan_secrets(s: &String, filename: &String) -> i32 {
     // API Token
     let tokens: Vec<Regex> = vec![
         Regex::new(r"\w+_pat_[a-zA-Z0-9_\-]{30,85}").unwrap(),
-        Regex::new(r"[a-zA-Z0-9\-_]{32,128}").unwrap(),
         Regex::new(r"Bearer\s+(.+)").unwrap(),
         Regex::new(r#"let token\s*=\s*"\w+_pat_[a-zA-Z0-9_\-]{30,85}"\s*;"#).unwrap(),
-        Regex::new(r#"let token\s*=\s*"[a-zA-Z0-9\-_]{32,128}"\s*;"#).unwrap(),
         Regex::new(r#"let token\s*=\s*"Bearer\s+(.+)"\s*;"#).unwrap(),
     ];
     // Password
@@ -83,7 +86,7 @@ pub fn scan_secrets(s: &String, filename: &String) -> i32 {
         Regex::new(r"password").unwrap(),
     ];
     let total_errors = 0;
-    diagnostic(&tokens, s, filename);
-    diagnostic(&passwords, s, filename);
+    diagnostic("Hard-coded token", &tokens, s, filename);
+    diagnostic("Hard-coded password", &passwords, s, filename);
     total_errors
 }

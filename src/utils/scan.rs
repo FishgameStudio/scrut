@@ -6,17 +6,16 @@ use globset::Glob;
 
 use crate::utils::{logging::verbose, scan_utils::secrets::scan_secrets};
 
-/// Check if path matches glob pattern, input path should be unix‑style relative path.
-fn is_match(pattern: &str, rel_path: &str) -> bool {
-    let glob = match Glob::new(pattern) {
-        Ok(g) => g,
-        Err(_) => return false,
-    };
-    glob.compile_matcher().is_match(rel_path)
+/// Determine whether a file matches a wildcard syntax.
+fn is_match(pattern: &str, rel_path_unix: &str) -> bool {
+    let glob_res = Glob::new(pattern);
+    match glob_res {
+        Ok(g) => g.compile_matcher().is_match(rel_path_unix),
+        Err(_) => false,
+    }
 }
 
-/// Recursively scan files inside given directory.
-/// Action receives absolute file path string.
+/// Recursion function to scan all files in specified directory.
 pub fn scan_files(
     action: &impl Fn(&String) -> Result<(), Box<dyn error::Error>>,
     directory: &String,
@@ -26,13 +25,13 @@ pub fn scan_files(
     for entry in entries {
         let entry = entry?;
         let path = entry.path();
-        let full_path = path.to_str().ok_or("Invalid UTF‑8 file path")?.to_string();
+        let full_path = path.to_str().ok_or("invalid utf‑8 file path")?.to_string();
 
         if path.is_dir() {
             verbose!("Recursing directory: {}", full_path);
             scan_files(action, &full_path)?;
         } else if path.is_file() {
-            verbose!("Processing file: {}", full_path);
+            verbose!("Doing action for file: {}", full_path);
             action(&full_path)?;
         }
     }
@@ -46,13 +45,13 @@ pub enum ItemType {
     All = 0x1 | 0x2,
 }
 
-/// Convert string argument to scan type enum.
+/// Convert string name to ItemType
 pub fn str2enum(name: &str) -> Result<ItemType, Box<dyn error::Error>> {
     match name {
         "*" | "all" => Ok(ItemType::All),
         "evil" => Ok(ItemType::Evil),
         "secrets" => Ok(ItemType::Secrets),
-        other => Err(format!("unknown scan item name: {}", other).into()),
+        other => Err(format!("fatal: unknown item name: {}", other).into()),
     }
 }
 
@@ -61,28 +60,46 @@ pub fn bit_mask(item: u64, target: ItemType) -> bool {
     (item & target as u64) != 0
 }
 
-/// Main scan entry, handle exclude patterns, .gitignore parsing and iterate scan roots.
+fn is_glob_meta(s: &str) -> bool {
+    s.contains(&['*', '?', '[', ']'][..])
+}
+
+/// Recursion function to scan files in current working directory.
 pub fn scan_cwd(
-    exclude: &[String],
+    user_exclude: &[String],
     scan_all: bool,
     items: &[&String],
 ) -> Result<(), Box<dyn error::Error>> {
     let cwd = env::current_dir()?;
     let cwd_str = cwd
         .to_str()
-        .ok_or("Current working directory has invalid UTF‑8 path")?;
+        .ok_or("current working directory contains invalid utf‑8")?;
 
-    let mut scan_mask: u64 = 0;
+    // Build scan mask by bit‑or multiple items
+    let mut mask: u64 = 0x0;
     for it in items {
         let tp = str2enum(it)?;
-        scan_mask |= tp as u64;
+        mask |= tp as u64;
     }
 
-    let mut exclude_patterns: Vec<String> = exclude.to_vec();
+    let mut exclude_patterns: Vec<String> = user_exclude.to_vec();
     let mut include_patterns: Vec<String> = Vec::new();
 
-    if exclude_patterns.is_empty() && !scan_all {
-        if fs::exists(".gitignore")? {
+    if scan_all {
+        // scan‑all mode: keep user ‑e excludes, add .git hard exclude
+        if !exclude_patterns.iter().any(|s| s == ".git") {
+            exclude_patterns.push(".git".to_string());
+            exclude_patterns.push(".git/**".to_string());
+        }
+    } else {
+        // normal mode: load .gitignore
+        if match fs::exists(".gitignore") {
+            Ok(exists) => exists,
+            Err(e) => {
+                eprintln!("warning: failed to stat .gitignore: {}", e);
+                false
+            }
+        } {
             let bytes = fs::read(".gitignore")?;
             match String::from_utf8(bytes) {
                 Ok(content) => {
@@ -91,74 +108,97 @@ pub fn scan_cwd(
                         if line.is_empty() || line.starts_with('#') {
                             continue;
                         }
+
                         if let Some(stripped) = line.strip_prefix('!') {
-                            include_patterns.push(stripped.replace("\\", "/"));
+                            let pat = stripped.replace("\\", "/");
+                            if pat.ends_with('/') {
+                                include_patterns.push(pat.clone());
+                                include_patterns.push(format!("{}**", pat));
+                            } else {
+                                include_patterns.push(pat.clone());
+                                // !negation: 如果不是glob元字符，也需要目录展开
+                                if !is_glob_meta(&pat) {
+                                    include_patterns.push(format!("{}/**", pat));
+                                }
+                            }
                         } else {
-                            exclude_patterns.push(line.replace("\\", "/"));
+                            let pat = line.replace("\\", "/");
+                            if pat.ends_with('/') {
+                                exclude_patterns.push(pat.clone());
+                                exclude_patterns.push(format!("{}**", pat));
+                            } else {
+                                exclude_patterns.push(pat.clone());
+                                // 非通配符pattern，可能是目录，追加 dir/**
+                                if !is_glob_meta(&pat) {
+                                    exclude_patterns.push(format!("{}/**", pat));
+                                }
+                            }
                         }
                     }
                 }
                 Err(e) => {
-                    eprintln!("warning: Failed to read .gitignore: {}", e);
+                    eprintln!("warning: Skipping reading .gitignore: {}", e);
+                    verbose!("skipping reading .gitignore: {}", e);
                 }
             }
         } else {
-            verbose!(".gitignore not found, skip loading ignore rules");
+            verbose!(".gitignore not found");
+        }
+        // always hard‑exclude .git folder for normal scan
+        if !exclude_patterns.iter().any(|s| s == ".git") {
+            exclude_patterns.push(".git".to_string());
         }
     }
 
-    let action = |full_file_path: &String| -> Result<(), Box<dyn error::Error>> {
-        let rel_path = full_file_path
+    //////// File Processor Closure ////////
+    let action = |full_abs: &String| -> Result<(), Box<dyn std::error::Error>> {
+        // convert absolute path to relative unix‑style path for glob matching
+        let rel = full_abs
             .strip_prefix(cwd_str)
-            .ok_or("File path is outside working directory")?
+            .ok_or("file outside working directory")?
             .replace("\\", "/");
-        let rel_path = rel_path.strip_prefix('/').unwrap_or(&rel_path);
+        let rel = rel.strip_prefix('/').unwrap_or(&rel);
 
-        let mut excluded = exclude_patterns.iter().any(|rule| is_match(rule, rel_path));
-        if excluded {
-            let forced_include = include_patterns.iter().any(|inc| is_match(inc, rel_path));
+        let mut is_excluded = exclude_patterns.iter().any(|rule| is_match(rule, rel));
+        // gitignore ! override: if matches include pattern, cancel exclude
+        if is_excluded {
+            let forced_include = include_patterns
+                .iter()
+                .any(|inc_rule| is_match(inc_rule, rel));
             if forced_include {
-                excluded = false;
+                is_excluded = false;
             }
         }
 
-        if excluded {
-            println!("File {} excluded", rel_path);
-            verbose!("Skipped excluded file: {}", rel_path);
+        if is_excluded {
+            println!("File {} excluded", rel);
+            verbose!("Skipped excluded file {}", rel);
             return Ok(());
         }
 
-        println!("Processing file: {}", rel_path);
-        verbose!("Absolute file path: {}", full_file_path);
+        println!("Processing file {}", rel);
+        verbose!("Processing absolute path: {}", full_abs);
 
-        let bytes = fs::read(full_file_path)?;
+        let bytes = fs::read(full_abs)?;
         match String::from_utf8(bytes) {
             Ok(text) => {
                 use ItemType::*;
-                if bit_mask(scan_mask, Secrets) {
-                    verbose!("Running secrets scan on: {}", rel_path);
-                    scan_secrets(&text, full_file_path);
+                if bit_mask(mask, Secrets) {
+                    verbose!("Scanning secrets in file {}", rel);
+                    scan_secrets(&text, full_abs);
                 }
-                if bit_mask(scan_mask, Evil) {
-                    verbose!("Running evil‑pattern scan on: {}", rel_path);
-                    todo!("Evil content scan not implemented");
+                if bit_mask(mask, Evil) {
+                    verbose!("Scanning evils in file {}", rel);
+                    todo!("No implementations of evil content scan.");
                 }
             }
             Err(e) => {
-                eprintln!("warning: Skip non‑utf8 file {}: {}", rel_path, e);
+                eprintln!("warning: Skipping reading {}: {}", rel, e);
+                verbose!("Skipping reading {}: {}", rel, e);
             }
         }
         Ok(())
     };
 
-    for scan_root in items {
-        if !fs::exists(scan_root)? {
-            eprintln!("error: Scan root path does not exist: {}", scan_root);
-            continue;
-        }
-        verbose!("Start scanning root: {}", scan_root);
-        scan_files(&action, scan_root)?;
-    }
-
-    Ok(())
+    scan_files(&action, &cwd_str.to_string())
 }
