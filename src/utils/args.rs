@@ -1,11 +1,14 @@
 //! Parse command-line arguments.
 
-use std::error;
+use std::{error, ffi::OsStr};
 
 use clap::{self, Arg, Command};
 
+use crate::utils::logging::enable_verbose;
 use crate::utils::scan::scan_cwd;
 use crate::utils::version::VERSION;
+
+use open::that;
 
 #[allow(unused)]
 #[derive(Debug)]
@@ -58,11 +61,14 @@ impl<'a> Parser<'a> {
 
         let version = Command::new("version");
 
+        let docs = Command::new("docs");
+
         let scan = Command::new("scan")
             .arg(
                 Arg::new("item") // Positional argument
                     .help("Specify items to scan")
-                    .required(true),
+                    .required(false)
+                    .num_args(1..),
             )
             .arg(
                 Arg::new("exclude")
@@ -93,7 +99,11 @@ impl<'a> Parser<'a> {
             );
 
         // Add subcommands.
-        let root = root.subcommand(&version).subcommand(&scan).subcommand(&fix);
+        let root = root
+            .subcommand(&version)
+            .subcommand(&scan)
+            .subcommand(&fix)
+            .subcommand(&docs);
 
         Self {
             flags: flags,
@@ -108,11 +118,31 @@ impl<'a> Parser<'a> {
 #[allow(unused)]
 pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
     let matches = parser.root.clone().get_matches();
+    if matches.get_flag("verbose") {
+        // Enable verbose logging.
+        enable_verbose().expect("fatal: Cannot open log file");
+    }
+    if matches.get_flag("confirm") {
+        todo!("Enable confirm before actions")
+    }
     // Match provided subcommand.
     match matches.subcommand() {
         Some(("version", _)) => {
             // Command `version`
             println!("scrut version {}", VERSION)
+        }
+        Some(("docs", _)) => {
+            // Command `docs`
+            const DOC_URL: &str = "file:///docs/index.html";
+            println!("Opening html page: {DOC_URL}");
+            match that(OsStr::new(DOC_URL)) {
+                Ok(()) => {
+                    println!("")
+                }
+                Err(e) => {
+                    panic!("Unable to open html page: {DOC_URL}")
+                }
+            }
         }
         Some(("scan", sub_matches)) => {
             // Command `scan`
@@ -131,7 +161,7 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
                     panic!("fatal: Error when parsing argument `exclude`: {}", e);
                 }
             };
-            match matches.try_get_many::<String>("item") {
+            match sub_matches.try_get_many::<String>("item") {
                 Ok(Some(items)) => {
                     // Item provided
                     let items: Vec<&String> = items.collect();
@@ -141,6 +171,7 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
                     // No item provided
                     let items: Vec<&String> = vec![&String::from("all")];
                     eprintln!("warning: No item provided, scanning all");
+                    scan_cwd(&exclude, scan_all, &vec![&"all".to_string()]);
                 }
                 Err(e) => {
                     // Error when parsing
@@ -150,6 +181,7 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
         }
         Some(("fix", sub_matches)) => {
             // Command `fix`
+            todo!("Implement command `fix`")
         }
         None => panic!("fatal: Must provide a command"),
         _ => panic!("fatal: Unknown command"),
