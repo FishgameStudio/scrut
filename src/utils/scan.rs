@@ -17,7 +17,7 @@ fn is_match(pattern: &str, rel_path_unix: &str) -> bool {
 
 /// Recursion function to scan all files in specified directory.
 pub fn scan_files(
-    action: &impl Fn(&String) -> Result<(), Box<dyn error::Error>>,
+    action: &mut impl FnMut(&String) -> Result<(), Box<dyn error::Error>>,
     directory: &String,
 ) -> Result<(), Box<dyn error::Error>> {
     let entries = fs::read_dir(directory)?;
@@ -152,8 +152,9 @@ pub fn scan_cwd(
     exclude_patterns.push("target/**".to_string());
     exclude_patterns.push(".git/**".to_string());
 
+    let mut issues: i32 = 0;
     //////// File Processor Closure ////////
-    let action = |full_abs: &String| -> Result<(), Box<dyn std::error::Error>> {
+    let mut action = |full_abs: &String| -> Result<(), Box<dyn std::error::Error>> {
         // convert absolute path to relative unix‑style path for glob matching
         let rel = full_abs
             .strip_prefix(cwd_str)
@@ -180,7 +181,7 @@ pub fn scan_cwd(
         verbose!("Processing absolute path: {}", full_abs);
 
         let bytes = fs::read(full_abs)?;
-        let mut issues: i32 = 0;
+
         match String::from_utf8(bytes) {
             Ok(text) => {
                 use ItemType::*;
@@ -194,20 +195,22 @@ pub fn scan_cwd(
                 }
             }
             Err(e) => {
-                eprintln!("warning: Skipping reading {}: {}", rel, e);
                 verbose!("Skipping reading {}: {}", rel, e);
             }
-        }
-        if issues > 0 {
-            eprintln!("\nOh no!");
-            eprintln!("{issues} issues found.");
-            verbose!("{issues} issues found");
-        } else {
-            println!("No issue found!");
-            verbose!("No issue found");
         }
         Ok(())
     };
 
-    scan_files(&action, &cwd_str.to_string())
+    scan_files(&mut action, &cwd_str.to_string())?;
+
+    if issues > 0 {
+        eprintln!("\nOh no!");
+        eprintln!("{issues} issues found.");
+        verbose!("{issues} issues found");
+    } else {
+        println!("No issues found!");
+        verbose!("No issues found");
+    }
+
+    Ok(())
 }
