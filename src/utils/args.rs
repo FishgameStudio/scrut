@@ -1,11 +1,13 @@
 //! Parse command-line arguments.
 
-use std::error;
+use std::{error, ffi::OsStr};
 
 use clap::{self, Arg, Command};
 
 use crate::utils::scan::scan_cwd;
 use crate::utils::version::VERSION;
+
+use open::that;
 
 #[allow(unused)]
 #[derive(Debug)]
@@ -57,6 +59,8 @@ impl<'a> Parser<'a> {
             );
 
         let version = Command::new("version");
+
+        let docs = Command::new("docs");
 
         let scan = Command::new("scan")
             .arg(
@@ -113,6 +117,19 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
         Some(("version", _)) => {
             // Command `version`
             println!("scrut version {}", VERSION)
+        }
+        Some(("docs", _)) => {
+            // Command `docs`
+            const DOC_URL: &str = "file:///docs/index.html";
+            println!("Opening html page: {DOC_URL}");
+            match that(OsStr::new(DOC_URL)) {
+                Ok(()) => {
+                    println!("")
+                }
+                Err(e) => {
+                    panic!("Unable to open html page: {DOC_URL}")
+                }
+            }
         }
         Some(("scan", sub_matches)) => {
             // Command `scan`
