@@ -149,6 +149,8 @@ pub fn scan_cwd(
             exclude_patterns.push(".git".to_string());
         }
     }
+    exclude_patterns.push("target/**".to_string());
+    exclude_patterns.push(".git/**".to_string());
 
     //////// File Processor Closure ////////
     let action = |full_abs: &String| -> Result<(), Box<dyn std::error::Error>> {
@@ -171,12 +173,10 @@ pub fn scan_cwd(
         }
 
         if is_excluded {
-            println!("File {} excluded", rel);
             verbose!("Skipped excluded file {}", rel);
             return Ok(());
         }
 
-        println!("Processing file {}", rel);
         verbose!("Processing absolute path: {}", full_abs);
 
         let bytes = fs::read(full_abs)?;
