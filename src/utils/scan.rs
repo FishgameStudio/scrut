@@ -4,7 +4,11 @@ use std::{env, error, fs};
 
 use globset::Glob;
 
-use crate::utils::{logging::verbose, scan_utils::secrets::scan_secrets};
+use crate::utils::logging::verbose;
+
+use crate::utils::scan_utils::{
+    hardcoded::scan_hardcoded, quality::scan_quality, secrets::scan_secrets,
+};
 
 /// Determine whether a file matches a wildcard syntax.
 fn is_match(pattern: &str, rel_path_unix: &str) -> bool {
@@ -42,16 +46,23 @@ pub fn scan_files(
 pub enum ItemType {
     Secrets = 0x1,
     Evil = 0x2,
-    All = 0x1 | 0x2,
+    Hardcoded = 0x4,
+    Quality = 0x8,
+    All = 0xF,
 }
 
 /// Convert string name to ItemType
-pub fn str2enum(name: &str) -> Result<ItemType, Box<dyn error::Error>> {
+/// # Panics
+/// If the name is not recongnized.
+pub fn str2enum(name: &str) -> ItemType {
+    use ItemType::*;
     match name {
-        "*" | "all" => Ok(ItemType::All),
-        "evil" => Ok(ItemType::Evil),
-        "secrets" => Ok(ItemType::Secrets),
-        other => Err(format!("fatal: unknown item name: {}", other).into()),
+        "*" | "all" => All,
+        "evil" => Evil,
+        "secrets" => Secrets,
+        "hardcoded" => Hardcoded,
+        "quality" => Quality,
+        other => panic!("fatal: unknown item name: {}", other),
     }
 }
 
@@ -78,7 +89,7 @@ pub fn scan_cwd(
     // Build scan mask by bit‑or multiple items
     let mut mask: u64 = 0x0;
     for it in items {
-        let tp = str2enum(it)?;
+        let tp = str2enum(it);
         mask |= tp as u64;
     }
 
@@ -116,7 +127,6 @@ pub fn scan_cwd(
                                 include_patterns.push(format!("{}**", pat));
                             } else {
                                 include_patterns.push(pat.clone());
-                                // !negation: 如果不是glob元字符，也需要目录展开
                                 if !is_glob_meta(&pat) {
                                     include_patterns.push(format!("{}/**", pat));
                                 }
@@ -128,7 +138,6 @@ pub fn scan_cwd(
                                 exclude_patterns.push(format!("{}**", pat));
                             } else {
                                 exclude_patterns.push(pat.clone());
-                                // 非通配符pattern，可能是目录，追加 dir/**
                                 if !is_glob_meta(&pat) {
                                     exclude_patterns.push(format!("{}/**", pat));
                                 }
@@ -192,6 +201,14 @@ pub fn scan_cwd(
                 if bit_mask(mask, Evil) {
                     verbose!("Scanning evils in file {}", rel);
                     todo!("No implementations of evil content scan.");
+                }
+                if bit_mask(mask, Hardcoded) {
+                    verbose!("Scanning hard-coded in file {}", rel);
+                    issues += scan_hardcoded(&text, full_abs);
+                }
+                if bit_mask(mask, Quality) {
+                    verbose!("Scanning safety in file {}", rel);
+                    issues += scan_quality(&text, full_abs);
                 }
             }
             Err(e) => {

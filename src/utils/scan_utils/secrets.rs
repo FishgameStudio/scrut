@@ -43,7 +43,7 @@ pub fn scan_matched(s: &String, pattern: &Regex) -> Vec<MatchPos> {
 
 /// Print the error message.
 #[inline]
-fn print_msg(prompt: &str, filename: &String, pos: &MatchPos, line_text: &str) -> () {
+pub fn print_msg(prompt: &str, filename: &String, pos: &MatchPos, line_text: &str) -> () {
     eprintln!("{prompt}: file {filename}, line {}:", pos.line);
     eprintln!("{} | {line_text}", pos.line);
     eprintln!(
@@ -55,7 +55,7 @@ fn print_msg(prompt: &str, filename: &String, pos: &MatchPos, line_text: &str) -
     );
 }
 /// Traverse all given regex, get scaned error, print message and return number of messages.
-fn diagnostic(
+pub fn diagnostic(
     error_msg: &str,
     patterns: &Vec<Regex>,
     file_content: &String,
@@ -87,6 +87,15 @@ lazy_static! {
         Regex::new(r#"let password\s*=".*""#).unwrap(),
         Regex::new(r#"(password|passwd)\s*[:=]\s*["'][^"']+["']"#).unwrap(),
     ];
+    static ref OTHER_RULES: Vec<Regex> = vec![
+        // IPv4 / IPv6
+        Regex::new(r#"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"#).unwrap(),
+        Regex::new(r#"\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,6}|:(?::[0-9a-fA-F]{1,4}){1,7}|::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}|[0-9a-fA-F]{1,4}::(?:[0-9a-fA-F]{1,4}:){0,5}[0-9a-fA-F]{1,4}\b"#).unwrap(),
+        // URL embedded credentials
+        Regex::new(r#"https?://[^"'`\s:@]+:[^"'`\s@]+@"#).unwrap(),
+        // JWT
+        Regex::new(r#"\beyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\b"#).unwrap(),
+    ];
 }
 
 /// Scan personal informations and secrets in file contents.
@@ -94,5 +103,6 @@ pub fn scan_secrets(s: &String, filename: &String) -> i32 {
     let mut total_errors = 0;
     total_errors += diagnostic("Hard-coded token", &*TOKEN_RULES, s, filename);
     total_errors += diagnostic("Hard-coded password", &*PASSWORD_RULES, s, filename);
+    total_errors += diagnostic("Found secret", &*OTHER_RULES, s, filename);
     total_errors
 }
