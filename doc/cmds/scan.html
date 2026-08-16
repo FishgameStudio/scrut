@@ -9,6 +9,33 @@
 </head>
 
 <body>
+    <nav>
+        <a href="../index.html">Home Page</a>
+        <a href="javascript:history.back()">Back</a>
+    </nav>
+    <h2>Name</h2>
+    <code>scrut scan</code> &middot; Scan specified types of issues in current working directory.
+    <h2>Synopsis</h2>
+    <pre>
+        scrut scan [ITEMS]... [-e&verbar;--exclude &lt;path&gt;] [-a|--scan-all]
+    </pre>
+    <h2>Description</h2>
+    Scan and find issues in commited files if possible. Types of issues includes:
+    <ul>
+        <li>secrets&colon; Commited personal secrets in git. Including hard-coded passwords, PATs, etc.</li>
+        <li>evils&colon; Malicious contents. Including evil scripts, processes, commits, etc.</li>
+        <li>all (aka "*")&colon; All issues. All of the above types are included.</li>
+    </ul>
+    <h2>Options</h2>
+    <li>
+        <code>&minus;e,--exclude</code>&colon; Exclude paths matching the given path; skip these filesduring scanning.
+        ".git/*" and "target/*" will be excluded.
+    </li>
+    <li>
+        <code>&minus;a,--scan-all</code>&colon; Scan all files. ".git/*" is excluded.
+    </li>
+    <h2>Panics</h2>
+    Panics if the type of item is not recongnized.
 
 </body>
 

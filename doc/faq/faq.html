@@ -1,3 +1,51 @@
 <!DOCTYPE html>
 
 <!--This is the root page of FAQs.-->
+
+<html>
+
+<head>
+    <title>Scrut Docs - FAQ</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../default.css">
+</head>
+
+<body>
+    <nav>
+        <a href="../index.html">Home Page</a>
+        <a href="javascript:history.back()">Back</a>
+    </nav>
+    <h1>Frequently Asked Questions</h1>
+    <hr>
+    Having problems with scrut? Here's the frequently asked questions, hope they're helpful to you.
+
+    <details open>
+        <!-- Do not bring question mark. -->
+        <summary>Why does Scrut report false positives</summary>
+        <div class="faq">
+            Scrut uses static pattern matching. Some code patterns may trigger false‑positive alerts. Adjust your
+            path exclude rules to skip known‑safe code files.
+        </div>
+    </details>
+
+    <details>
+        <summary>How can I ignore certain files</summary>
+        <div class="faq">
+            Use the <code>&minus;e,--exclude &lt;path&gt;</code> flag to exclude files or directories from scanning.
+        </div>
+    </details>
+
+    <details>
+        <summary>Where is Scrut's log file stored?</summary>
+        <div class="faq">
+            Scrut stores global log files at <code>~/scrut.log</code>.
+        </div>
+    </details>
+
+
+
+    If you have something to add, please leave your Issue on <a
+        href="https://github.com/FishgameStudio/scrut/issues">GitHub</a>.
+</body>
+
+</html>
