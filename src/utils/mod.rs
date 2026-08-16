@@ -1,4 +1,4 @@
-pub mod scan;
 pub mod args;
+pub mod scan;
+pub mod scan_utils;
 pub mod version;
-pub mod scan_secrets;

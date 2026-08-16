@@ -1,10 +1,10 @@
-//! Scanning functions.
+//! Scan functions.
 
 use std::{self, env, error, fs};
 
 use globset::Glob;
 
-use crate::utils::scan_secrets::scan_secrets;
+use crate::utils::scan_utils::secrets::scan_secrets;
 
 /// Determine whether a file matches a wildcard syntax.
 fn is_match(pattern: &str, name: &str) -> bool {
