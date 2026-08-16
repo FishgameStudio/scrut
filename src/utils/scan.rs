@@ -4,7 +4,7 @@ use std::{self, env, error, fs};
 
 use globset::Glob;
 
-use crate::utils::scan_utils::secrets::scan_secrets;
+use crate::utils::{logging::verbose, scan_utils::secrets::scan_secrets};
 
 /// Determine whether a file matches a wildcard syntax.
 fn is_match(pattern: &str, name: &str) -> bool {
@@ -28,11 +28,14 @@ pub fn scan_files(
         let oss_name: std::ffi::OsString = entry.file_name();
         let name = oss_name.to_string_lossy().into_owned();
 
-        if entry.path().is_dir() {
+        let path = entry.path();
+        if path.is_dir() {
             // Directory -> recursion.
+            verbose!("Recursing directory: {}", path.to_str().unwrap());
             scan_files(action, &name)?;
         } else if entry.path().is_file() {
             // File -> do specified action.
+            verbose!("Doing action for file: {}", path.to_str().unwrap());
             action(&name)?;
         }
     }
@@ -84,6 +87,7 @@ pub fn scan_cwd(
         // Read .gitignore if exists.
         if fs::exists(".gitignore").is_err() {
             eprintln!("warning: Skipping reading .gitignore because it doesn't exist.");
+            verbose!("skipping reading .gitignore: not found");
         } else {
             let bytes = fs::read(".gitignore")?;
             match String::from_utf8(bytes) {
@@ -103,6 +107,7 @@ pub fn scan_cwd(
                 }
                 Err(e) => {
                     eprintln!("warning: Skipping reading .gitignore: {}", e);
+                    verbose!("skipping reading .gitignore: {}", e);
                 }
             }
         }
@@ -114,8 +119,10 @@ pub fn scan_cwd(
         let is_excluded = exclude.iter().any(|rule| is_match(rule, file));
         if is_excluded && !include.contains(file) {
             println!("File {} excluded", file);
+            verbose!("Skipped excluded file {}", file);
         } else {
             println!("Processing file {} with items {:?}", file, items);
+            verbose!("Processing file {} with items {:?}", file, items);
 
             // Read file contents
             let bytes = fs::read(file)?;
@@ -125,15 +132,19 @@ pub fn scan_cwd(
                     // Match item
                     use ItemType::*;
                     if bit_mask(item, Secrets) {
+                        verbose!("Scanning secrets in file {}", file);
                         // API Tokens, passwords, etc.
                         scan_secrets(&s, file);
-                    } else if bit_mask(item, Evil) {
+                    }
+                    if bit_mask(item, Evil) {
+                        verbose!("Scanning evils in file {}", file);
                         // Evil scripts, logics, etc.
                         todo!("No implementations of evil content scan.");
                     }
                 }
                 Err(e) => {
                     eprintln!("warning: Skipping reading {}: {}", file, e);
+                    verbose!("Skipping reading {}: {}", file, e)
                 }
             }
         }

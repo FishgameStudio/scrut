@@ -2,6 +2,8 @@
 
 use regex::Regex;
 
+use crate::utils::logging::verbose;
+
 /// Match position metadata containing 1‑based line number, start and end byte offsets.
 #[derive(Debug)]
 pub struct MatchPos {
@@ -12,6 +14,10 @@ pub struct MatchPos {
 impl MatchPos {
     /// Create a new `MatchPos` object.
     pub fn new(line: usize, start: usize, end: usize) -> Self {
+        verbose!(
+            "Created new `MatchPos` object with params: {:?}",
+            (line, start, end)
+        );
         Self { line, start, end }
     }
 }
@@ -21,6 +27,7 @@ impl MatchPos {
 #[inline]
 #[must_use = "Do not discard returned value"]
 pub fn scan_matched(s: &String, pattern: &Regex) -> Vec<MatchPos> {
+    verbose!("Scanning matches of regex {pattern}");
     let mut res: Vec<MatchPos> = Vec::new();
     for (line_idx, line) in s.lines().enumerate() {
         let line_no = line_idx + 1;

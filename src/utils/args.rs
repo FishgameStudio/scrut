@@ -4,6 +4,7 @@ use std::{error, ffi::OsStr};
 
 use clap::{self, Arg, Command};
 
+use crate::utils::logging::enable_verbose;
 use crate::utils::scan::scan_cwd;
 use crate::utils::version::VERSION;
 
@@ -112,6 +113,13 @@ impl<'a> Parser<'a> {
 #[allow(unused)]
 pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
     let matches = parser.root.clone().get_matches();
+    if matches.get_flag("verbose") {
+        // Enable verbose logging.
+        enable_verbose().expect("fatal: Cannot open log file");
+    }
+    if matches.get_flag("confirm") {
+        todo!("Enable confirm before actions")
+    }
     // Match provided subcommand.
     match matches.subcommand() {
         Some(("version", _)) => {
