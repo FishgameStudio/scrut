@@ -71,6 +71,17 @@ pub fn print_msg(prompt: &str, filename: &String, pos: &MatchPos, line_text: &st
         " ".repeat(line_text.len() - pos.end)   // rest spaces
     );
 }
+
+fn kind2str(kind: it) -> &'static str {
+    match kind {
+        it::Evil => "Found evil: ",
+        it::Hardcoded => "Found hard-coded: ",
+        it::Quality => "Found code quality: ",
+        it::Secrets => "Found secrets: ",
+        it::All => "Found issue: ",
+    }
+}
+
 #[must_use = "Do not discard returned value"]
 /// Traverse all given regex, get scaned error, print message and return number of messages.
 pub fn diagnostic_by_regex(rule: &Rule, file_content: &String, filename: &String) -> i32 {
@@ -81,18 +92,7 @@ pub fn diagnostic_by_regex(rule: &Rule, file_content: &String, filename: &String
             let line_text = file_content.lines().collect::<Vec<_>>()[pos.line - 1];
             // Print error message
             print_msg(
-                format!(
-                    "{}{}",
-                    match rule.kind {
-                        it::Evil => "Found evil: ",
-                        it::Hardcoded => "Found hard-coded: ",
-                        it::Quality => "Found code quality: ",
-                        it::Secrets => "Found secrets: ",
-                        it::All => "Found issue: ",
-                    },
-                    rule.prompt
-                )
-                .as_str(),
+                format!("{}{}", kind2str(rule.kind), rule.prompt).as_str(),
                 filename,
                 &pos,
                 line_text,

@@ -7,7 +7,7 @@ use globset::Glob;
 use crate::utils::logging::verbose;
 
 use crate::utils::scan_utils::{
-    hardcoded::scan_hardcoded, quality::scan_quality, secrets::scan_secrets,
+    evil::scan_evil, hardcoded::scan_hardcoded, quality::scan_quality, secrets::scan_secrets,
 };
 
 /// Determine whether a file matches a wildcard syntax.
@@ -200,7 +200,7 @@ pub fn scan_cwd(
                 }
                 if bit_mask(mask, Evil) {
                     verbose!("Scanning evils in file {}", rel);
-                    todo!("No implementations of evil content scan.");
+                    issues += scan_evil(&text, full_abs);
                 }
                 if bit_mask(mask, Hardcoded) {
                     verbose!("Scanning hard-coded in file {}", rel);
