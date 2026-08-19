@@ -15,7 +15,6 @@ pub static BAD: Lazy<Rule> = Lazy::new(|| {
             // Non-standard code
             Regex::new(r#"\bwhile\s+true\s+\{"#).unwrap(),
             Regex::new(r#"dbg!\("#).unwrap(),
-            Regex::new(r#"todo!\("#).unwrap(),
             Regex::new(r#"loop\{\s*\}"#).unwrap(),
             Regex::new(r#"unimplemented!\("#).unwrap(),
             Regex::new(r#"unreachable!\("#).unwrap(),
@@ -29,9 +28,10 @@ pub static BAD: Lazy<Rule> = Lazy::new(|| {
 });
 pub static TODO: Lazy<Rule> = Lazy::new(|| {
     Rule::new(
-        "Non-standard code",
+        "Todo",
         it::Quality,
         vec![
+            Regex::new(r#"todo!\("#).unwrap(),
             Regex::new(r"\/\/\s*TODO\b").unwrap(),
             Regex::new(r"\/\/\s*FIXME\b").unwrap(),
             Regex::new(r"\/\/\s*HACK\b").unwrap(),
