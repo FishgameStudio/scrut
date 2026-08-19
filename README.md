@@ -33,7 +33,7 @@ Scrut is developed in **Rust**, bringing memory safety, excellent runtime perfor
 
 ## 🗺️ Roadmap
 
-- [ ] Feature1
+- [ ] Diagnosis code by AST instead of static Regex matching. 
 - [ ] Feature2
 - [ ] Feature3
 

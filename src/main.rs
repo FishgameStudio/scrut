@@ -3,7 +3,7 @@
 use std::error::Error;
 
 mod utils;
-use utils::args::{parse_arg, Parser, CommonFlags};
+use utils::args::{CommonFlags, Parser, parse_arg};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let flags = CommonFlags::new(false, false);

@@ -5,7 +5,7 @@ use std::{error, fs::exists};
 
 use clap::{self, Arg, Command};
 
-use crate::utils::logging::enable_verbose;
+use crate::utils::logging::{enable_verbose, init_log_file};
 use crate::utils::scan::scan_cwd;
 use crate::utils::version::VERSION;
 
@@ -58,6 +58,14 @@ impl<'a> Parser<'a> {
                     .long("confirm")
                     .help("Confirm before actions")
                     .action(clap::ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("max-log-size")
+                    .long("max-log-size")
+                    .value_name("MB")
+                    .help("Specify maximum size (MiB) of the log file.")
+                    .required(false)
+                    .value_parser(clap::value_parser!(u64)),
             );
 
         let version = Command::new("version");
@@ -121,10 +129,19 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
     let matches = parser.root.clone().get_matches();
     if matches.get_flag("verbose") {
         // Enable verbose logging.
-        enable_verbose().expect("fatal: Cannot open log file");
+        enable_verbose();
     }
     if matches.get_flag("confirm") {
         todo!("Enable confirm before actions")
+    }
+    // Initialize log system.
+    match matches.get_one::<u64>("max-log-size") {
+        Some(val) => {
+            init_log_file(Some(val * 1024 * 1024))?; // MiB
+        }
+        None => {
+            init_log_file(None)?;
+        }
     }
     // Match provided subcommand.
     match matches.subcommand() {
@@ -141,15 +158,12 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
             }
             let doc_path = Path::new("./docs/index.html").canonicalize().unwrap();
             println!("Opening html page: {}", doc_path.to_str().unwrap());
-            match that(doc_path.as_os_str()) {
-                Ok(()) => {}
-                Err(e) => {
-                    panic!(
-                        "fatal: Unable to open html page {}: {}",
-                        doc_path.to_str().unwrap(),
-                        e
-                    );
-                }
+            if let Err(e) = that(doc_path.as_os_str()) {
+                panic!(
+                    "fatal: Unable to open html page {}: {}",
+                    doc_path.to_str().unwrap(),
+                    e
+                );
             }
         }
         Some(("scan", sub_matches)) => {

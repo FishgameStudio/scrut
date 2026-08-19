@@ -2,37 +2,48 @@
 
 use regex::Regex;
 
-use crate::utils::scan_utils::secrets::diagnostic;
+use super::utils::{Rule, diagnostic_by_regex};
+use crate::utils::scan::ItemType as it;
 
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 
-lazy_static! {
-    static ref BAD: Vec<Regex> = vec![
-        // Non-standard code
-        Regex::new(r#"\bwhile\s+true\s+\{"#).unwrap(),
-        Regex::new(r#"dbg!\("#).unwrap(),
-        Regex::new(r#"todo!\("#).unwrap(),
-        Regex::new(r#"loop\{\s*\}"#).unwrap(),
-        Regex::new(r#"unimplemented!\("#).unwrap(),
-        Regex::new(r#"unreachable!\("#).unwrap(),
-        Regex::new(r#"unreachable_unchecked\("#).unwrap(),
-        Regex::new(r#"mem::forget\("#).unwrap(),
-        Regex::new(r#"\bunsafe\s*\{"#).unwrap(),
-        Regex::new(r#"==\s*(true|false)\b"#).unwrap(),
-        Regex::new(r#";;"#).unwrap(),
-    ];
-    static ref TODO: Vec<Regex> = vec![
-        Regex::new(r"\/\/\s*TODO\b").unwrap(),
-        Regex::new(r"\/\/\s*FIXME\b").unwrap(),
-        Regex::new(r"\/\/\s*HACK\b").unwrap(),
-        Regex::new(r"\/\/\s*BUG\b").unwrap(),
-        Regex::new(r"\/\/\s*XXX\b").unwrap(),
-    ];
-}
+pub static BAD: Lazy<Rule> = Lazy::new(|| {
+    Rule::new(
+        "Non-standard code",
+        it::Quality,
+        vec![
+            // Non-standard code
+            Regex::new(r#"\bwhile\s+true\s+\{"#).unwrap(),
+            Regex::new(r#"dbg!\("#).unwrap(),
+            Regex::new(r#"loop\{\s*\}"#).unwrap(),
+            Regex::new(r#"unimplemented!\("#).unwrap(),
+            Regex::new(r#"unreachable!\("#).unwrap(),
+            Regex::new(r#"unreachable_unchecked\("#).unwrap(),
+            Regex::new(r#"mem::forget\("#).unwrap(),
+            Regex::new(r#"\bunsafe\s*\{"#).unwrap(),
+            Regex::new(r#"==\s*(true|false)\b"#).unwrap(),
+            Regex::new(r#";;"#).unwrap(),
+        ],
+    )
+});
+pub static TODO: Lazy<Rule> = Lazy::new(|| {
+    Rule::new(
+        "Todo",
+        it::Quality,
+        vec![
+            Regex::new(r#"todo!\("#).unwrap(),
+            Regex::new(r"\/\/\s*TODO\b").unwrap(),
+            Regex::new(r"\/\/\s*FIXME\b").unwrap(),
+            Regex::new(r"\/\/\s*HACK\b").unwrap(),
+            Regex::new(r"\/\/\s*BUG\b").unwrap(),
+            Regex::new(r"\/\/\s*XXX\b").unwrap(),
+        ],
+    )
+});
 
 pub fn scan_quality(s: &String, filename: &String) -> i32 {
     let mut total_error: i32 = 0;
-    total_error += diagnostic("Non-stand code", &*BAD, s, filename);
-    total_error += diagnostic("Todo", &*TODO, s, filename);
+    total_error += diagnostic_by_regex(&*BAD, s, filename);
+    total_error += diagnostic_by_regex(&*TODO, s, filename);
     total_error
 }
