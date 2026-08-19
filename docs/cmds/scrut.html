@@ -20,11 +20,14 @@
     Here's the documentation of command <code>scrut</code>.
     <h2>Synopsis</h2>
     <pre>
-        scrut [-v|--verbose] [-c|--confirm] [version|docs|scan|fix] [args]
+        scrut [-v|--verbose] [-c|--confirm] [--max-log-size &lt;MiB&gt;] [command] [args]
     </pre>
     <h2>Options</h2>
     <li><code>&minus;v,--verbose</code>&colon; Enable verbose logging</li>
     <li><code>&minus;c,--confirm</code>&colon; Confirm before actions</li>
+    <li><code>&minus;&minus;max-log-size</code></li>&colon; Set the maximum size of the log file
+    (<code>~/scrut.log</code>). The unit
+    of the size is <b>MiB</b>
     <h2>Commands</h2>
     <li><a href="./version.html">version</a>&colon; Show current version of <code>scrut</code></li>
     <li><a href="./docs.html">docs</a>&colon; Open web page of Scrut Docs with default browser</li>
