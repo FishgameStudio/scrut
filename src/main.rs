@@ -7,7 +7,7 @@ use utils::args::{CommonFlags, Parser, parse_arg};
 use utils::logging::init_log_file;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    init_log_file()?;
+    init_log_file(None)?;
     let flags = CommonFlags::new(false, false);
     let arg_parser = Parser::new(&flags);
     parse_arg(arg_parser)

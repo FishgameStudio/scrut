@@ -9,35 +9,44 @@ use chrono::Local;
 use dirs::home_dir;
 
 #[inline(always)]
-#[allow(unused)]
 pub fn now_str() -> String {
     Local::now().format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
 /// Controls whether verbose messages print to console.
 /// File logging is always enabled regardless of this flag.
-#[allow(dead_code)]
 pub static VERBOSE_LOGGING: AtomicBool = AtomicBool::new(false);
 
 /// Global handle of log file, always opened on startup.
-#[allow(dead_code)]
 pub static LOG_FILE: Mutex<Option<File>> = Mutex::new(None);
+
+/// Max size of log file.
+pub const MAX_LOG_BYTES: u64 = 10 * 1024 * 1024;
 
 /// Initialize log file, call once at program start(main).
 /// Always open log file, independent of verbose flag.
-pub fn init_log_file() -> io::Result<()> {
+pub fn init_log_file(max_log_bytes: Option<u64>) -> io::Result<()> {
+    let home = home_dir().ok_or(io::Error::new(
+        io::ErrorKind::NotFound,
+        "failed to get home directory",
+    ))?;
+    let home_str = home.to_str().ok_or(io::Error::new(
+        io::ErrorKind::InvalidData,
+        "home path invalid utf‑8",
+    ))?;
+    let log_path = format!("{}/scrut.log", home_str);
+    // Clear log file if size is greater than 10MB.
+    let max_log_bytes: u64 = max_log_bytes.unwrap_or(MAX_LOG_BYTES);
+    if std::path::Path::new(&log_path).exists() {
+        let meta = std::fs::metadata(&log_path)?;
+        if meta.len() > max_log_bytes {
+            // Open and truncate, clear old logs.
+            let _ = File::create(&log_path)?;
+        }
+    }
+
     let mut guard = LOG_FILE.lock().unwrap();
     if guard.is_none() {
-        let home = home_dir().ok_or(io::Error::new(
-            io::ErrorKind::NotFound,
-            "failed to get home directory",
-        ))?;
-        let home_str = home.to_str().ok_or(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "home path invalid utf‑8",
-        ))?;
-        let log_path = format!("{}/scrut.log", home_str);
-
         let file = OpenOptions::new()
             .create(true)
             .append(true)
