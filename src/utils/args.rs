@@ -5,7 +5,7 @@ use std::{error, fs::exists};
 
 use clap::{self, Arg, Command};
 
-use crate::utils::logging::enable_verbose;
+use crate::utils::logging::{enable_verbose, init_log_file};
 use crate::utils::scan::scan_cwd;
 use crate::utils::version::VERSION;
 
@@ -58,6 +58,14 @@ impl<'a> Parser<'a> {
                     .long("confirm")
                     .help("Confirm before actions")
                     .action(clap::ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("max-log-size")
+                    .long("max-log-size")
+                    .value_name("MB")
+                    .help("Specify maximum size (MiB) of the log file.")
+                    .required(false)
+                    .value_parser(clap::value_parser!(u64)),
             );
 
         let version = Command::new("version");
@@ -125,6 +133,15 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
     }
     if matches.get_flag("confirm") {
         todo!("Enable confirm before actions")
+    }
+    // Initialize log system.
+    match matches.get_one::<u64>("max-log-size") {
+        Some(val) => {
+            init_log_file(Some(val * 1024 * 1024))?; // MiB
+        }
+        None => {
+            init_log_file(None)?;
+        }
     }
     // Match provided subcommand.
     match matches.subcommand() {
