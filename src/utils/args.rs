@@ -121,7 +121,7 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
     let matches = parser.root.clone().get_matches();
     if matches.get_flag("verbose") {
         // Enable verbose logging.
-        enable_verbose().expect("fatal: Cannot open log file");
+        enable_verbose();
     }
     if matches.get_flag("confirm") {
         todo!("Enable confirm before actions")
