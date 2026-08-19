@@ -141,15 +141,12 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
             }
             let doc_path = Path::new("./docs/index.html").canonicalize().unwrap();
             println!("Opening html page: {}", doc_path.to_str().unwrap());
-            match that(doc_path.as_os_str()) {
-                Ok(()) => {}
-                Err(e) => {
-                    panic!(
-                        "fatal: Unable to open html page {}: {}",
-                        doc_path.to_str().unwrap(),
-                        e
-                    );
-                }
+            if let Err(e) = that(doc_path.as_os_str()) {
+                panic!(
+                    "fatal: Unable to open html page {}: {}",
+                    doc_path.to_str().unwrap(),
+                    e
+                );
             }
         }
         Some(("scan", sub_matches)) => {
