@@ -25,6 +25,14 @@ pub const MAX_LOG_BYTES: u64 = 10 * 1024 * 1024;
 
 /// Initialize log file, call once at program start(main).
 /// Always open log file, independent of verbose flag.
+/// # Examples
+/// ```
+/// use std::error::Error;
+/// fn main() -> Result<(), Box<dyn Error>> {
+///     init_log_file(None);           // Init with default size.
+///     init_log_file(Some(5 * 1024 * 1024)) // Init with specified size.
+/// }
+/// ```
 pub fn init_log_file(max_log_bytes: Option<u64>) -> io::Result<()> {
     let home = home_dir().ok_or(io::Error::new(
         io::ErrorKind::NotFound,
