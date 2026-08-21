@@ -1,11 +1,13 @@
-//! Parse command-line arguments.
+//! Parse command-line arguments and run their corresponding task.
+//! Before initialization of log system, **do not** use log macros in [`crate::utils::logging`].
+//! Note: The log system is initialized by [`crate::utils::logging::init_log_file`].
 
 use std::path::Path;
 use std::{error, fs::exists};
 
 use clap::{self, Arg, Command};
 
-use crate::utils::logging::{enable_verbose, init_log_file};
+use crate::utils::logging::{enable_verbose, fatal, init_log_file, verbose, warning};
 use crate::utils::scan::scan_cwd;
 use crate::utils::version::VERSION;
 
@@ -135,6 +137,7 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
         todo!("Enable confirm before actions")
     }
     // Initialize log system.
+    // You can log below this match statement!
     match matches.get_one::<u64>("max-log-size") {
         Some(val) => {
             init_log_file(Some(val * 1024 * 1024))?; // MiB
@@ -147,20 +150,22 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
     match matches.subcommand() {
         Some(("version", _)) => {
             // Command `version`
+            verbose!("print version of scrut ({})", VERSION);
             println!("scrut version {}", VERSION)
         }
         Some(("docs", _)) => {
             // Command `docs`
             match exists("./docs/index.html") {
                 Ok(true) => {}
-                Ok(false) => panic!("fatal: Documentation html not found"),
-                Err(e) => panic!("fatal: Unable to access documentation html: {}", e),
+                Ok(false) => fatal!("Documentation html not found"),
+                Err(e) => fatal!("Unable to access documentation html: {}", e),
             }
             let doc_path = Path::new("./docs/index.html").canonicalize().unwrap();
             println!("Opening html page: {}", doc_path.to_str().unwrap());
+            verbose!("Opening html page: {}", doc_path.to_str().unwrap());
             if let Err(e) = that(doc_path.as_os_str()) {
-                panic!(
-                    "fatal: Unable to open html page {}: {}",
+                fatal!(
+                    "Unable to open html page {}: {}",
                     doc_path.to_str().unwrap(),
                     e
                 );
@@ -172,15 +177,17 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
             let exclude: Vec<String> = match sub_matches.try_get_many("exclude") {
                 Ok(Some(patterns)) => {
                     // Exclusion list provided
+                    verbose!("Parsed argument -e, got patterns {:?}", patterns);
                     patterns.map(|s: &String| s.clone()).collect()
                 }
                 Ok(None) => {
                     // No exclusion
+                    verbose!("Parsed argument -e, got 0");
                     vec![]
                 }
                 Err(e) => {
                     // Error when parsing
-                    panic!("fatal: Error when parsing argument `exclude`: {}", e);
+                    fatal!("Error when parsing argument `exclude`: {}", e);
                 }
             };
             match sub_matches.try_get_many::<String>("item") {
@@ -191,12 +198,12 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
                 }
                 Ok(None) => {
                     // No item provided
-                    eprintln!("warning: No item provided, scanning all");
+                    warning!("No item provided, scanning all");
                     scan_cwd(&exclude, scan_all, &vec![&"all".to_string()])?;
                 }
                 Err(e) => {
                     // Error when parsing
-                    panic!("fatal: Error when parsing argument `item`: {}", e);
+                    fatal!("Error when parsing argument `item`: {}", e);
                 }
             }
         }
@@ -205,8 +212,8 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
             // Command `fix`
             todo!("Implement command `fix`")
         }
-        None => panic!("fatal: Must provide a command"),
-        _ => panic!("fatal: Unknown command"),
+        None => fatal!("Must provide a command"),
+        _ => fatal!("Unknown command"),
     }
     Ok(())
 }

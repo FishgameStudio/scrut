@@ -8,10 +8,37 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use chrono::Local;
 use dirs::home_dir;
 
+////// Macro functions for color escaping //////
+
+/// Generates a string wrapped with ANSI red escape sequences.
+#[allow(unused_macros)]
+macro_rules! red {
+    ($s:expr) => {
+        format!("\x1b[31m{}\x1b[0m", $s)
+    };
+}
+/// Generates a string wrapped with ANSI yellow escape sequences.
+#[allow(unused_macros)]
+macro_rules! yellow {
+    ($s:expr) => {
+        format!("\x1b[33m{}\x1b[0m", $s)
+    };
+}
+/// Generates a string wrapped with ANSI magenta‑purple escape sequences.
+macro_rules! purple {
+    ($s:expr) => {
+        format!("\x1b[35m{}\x1b[0m", $s)
+    };
+}
+#[allow(unused_imports)]
+pub(crate) use {purple, red, yellow};
+
 #[inline(always)]
 pub fn now_str() -> String {
     Local::now().format("%Y-%m-%d %H:%M:%S").to_string()
 }
+
+////// Logging //////
 
 /// Controls whether verbose messages print to console.
 /// File logging is always enabled regardless of this flag.
@@ -93,20 +120,24 @@ macro_rules! verbose {
         {
             use std::io::Write;
             use std::sync::atomic::Ordering;
+            use std::thread;
+            use crate::utils::logging as this;
             let args = format_args!($($arg)*);
-            let timestamp = crate::utils::logging::now_str();
-            let func = crate::utils::logging::func_name!();
-            let line = format!("[{} in {}] {}\n", timestamp, func, args);
+            let timestamp = this::now_str();
+            let func = this::func_name!();
+            let curr_thread = thread::current();
+            let thread_name = curr_thread.name().unwrap_or("main");
+            let line = format!("[{} thread '{}' in '{}'] {}\n", thread_name, timestamp, func, args);
 
-            // print to console ONLY when verbose flag is on
-            if crate::utils::logging::VERBOSE_LOGGING.load(Ordering::Relaxed) {
-                print!("{}", line);
+            // Print to console ONLY when verbose flag is on
+            if this::VERBOSE_LOGGING.load(Ordering::Relaxed) {
+                print!("{} {}", this::purple!("Verbose:"), line);
             }
 
             // ALWAYS write to log file (if file handle exists)
-            if let Ok(mut guard) = crate::utils::logging::LOG_FILE.lock() {
+            if let Ok(mut guard) = this::LOG_FILE.lock() {
                 if let Some(ref mut f) = *guard {
-                    let _ = f.write_all(line.as_bytes());
+                    let _ = f.write_all(format!("[v] {}", line).as_bytes());
                     let _ = f.flush();
                 }
             }
@@ -114,3 +145,83 @@ macro_rules! verbose {
     };
 }
 pub(crate) use verbose;
+
+/// Print warning message and write into the log file.
+macro_rules! warning {
+    ($($arg:tt)*) => {
+        {
+            use std::io::Write;
+            use crate::utils::logging as this;
+            let args = format_args!($($arg)*);
+            let timestamp = this::now_str();
+            let func = this::func_name!();
+            let line = format!("[{} in {}] {}\n", timestamp, func, args);
+
+            eprint!("{} {}", this::yellow!("Warning:"), line);
+
+            // Write to the log file.
+            if let Ok(mut guard) = this::LOG_FILE.lock() {
+                if let Some(ref mut f) = *guard {
+                    let _ = f.write_all(format!("[w] {}", line).as_bytes());
+                    let _ = f.flush();
+                }
+            }
+        }
+    };
+}
+pub(crate) use warning;
+
+/// Print fatal message and write into the log file.
+/// This macro will **automatically panic** if matched arm #0.
+macro_rules! fatal {
+    ($($arg:tt)*) => {
+        {
+            use std::io::Write;
+            use crate::utils::logging as this;
+            use std::thread;
+            let args = format_args!($($arg)*);
+            let timestamp = this::now_str();
+            let func = this::func_name!();
+            let curr_thread = thread::current();
+            let thread_name = curr_thread.name().unwrap_or("main");
+            let line = format!("[{} thread '{}' panicked in '{}'] {}\n", thread_name, timestamp, func, args);
+
+            eprint!("{} {}", this::red!("Fatal:"), line);
+
+            // Write to the log file.
+            if let Ok(mut guard) = this::LOG_FILE.lock() {
+                if let Some(ref mut f) = *guard {
+                    let _ = f.write_all(format!("[f] {}", line).as_bytes());
+                    let _ = f.flush();
+                }
+            }
+
+            // Panic
+            panic!("{}", args);
+        }
+    };
+    (no_panic; $($arg:tt)*) => {
+        {
+            use std::io::Write;
+            use std::thread;
+            use crate::utils::logging as this;
+            let args = format_args!($($arg)*);
+            let timestamp = this::now_str();
+            let func = this::func_name!();
+            let curr_thread = thread::current();
+            let thread_name = curr_thread.name().unwrap_or("main");
+            let line = format!("[{} thread '{}' panicked in '{}'] {}\n", thread_name, timestamp, func, args);
+
+            eprint!("{} {}", this::red!("Fatal:"), line);
+
+            // Write to the log file.
+            if let Ok(mut guard) = this::LOG_FILE.lock() {
+                if let Some(ref mut f) = *guard {
+                    let _ = f.write_all(format!("[f] {}", line).as_bytes());
+                    let _ = f.flush();
+                }
+            }
+        }
+    };
+}
+pub(crate) use fatal;

@@ -4,7 +4,7 @@ use std::{env, error, fs};
 
 use globset::Glob;
 
-use crate::utils::logging::verbose;
+use crate::utils::logging::{fatal, verbose, warning};
 
 use crate::utils::scan_utils::{
     evil::scan_evil, hardcoded::scan_hardcoded, quality::scan_quality, secrets::scan_secrets,
@@ -62,7 +62,7 @@ pub fn str2enum(name: &str) -> ItemType {
         "secrets" => Secrets,
         "hardcoded" => Hardcoded,
         "quality" => Quality,
-        other => panic!("fatal: unknown item name: {}", other),
+        other => fatal!("unknown item name: {}", other),
     }
 }
 
@@ -107,7 +107,7 @@ pub fn scan_cwd(
         if match fs::exists(".gitignore") {
             Ok(exists) => exists,
             Err(e) => {
-                eprintln!("warning: failed to stat .gitignore: {}", e);
+                warning!("failed to stat .gitignore: {}", e);
                 false
             }
         } {
@@ -146,7 +146,7 @@ pub fn scan_cwd(
                     }
                 }
                 Err(e) => {
-                    eprintln!("warning: Skipping reading .gitignore: {}", e);
+                    warning!("Skipping reading .gitignore: {}", e);
                     verbose!("skipping reading .gitignore: {}", e);
                 }
             }
