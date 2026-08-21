@@ -160,6 +160,8 @@ pub fn scan_cwd(
     }
     exclude_patterns.push("target/**".to_string());
     exclude_patterns.push(".git/**".to_string());
+    exclude_patterns.push("Cargo.*".to_string());
+    exclude_patterns.push(".cargo/**".to_string());
 
     let mut issues: i32 = 0;
     //////// File Processor Closure ////////
