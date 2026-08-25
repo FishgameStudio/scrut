@@ -199,7 +199,7 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
                 Ok(None) => {
                     // No item provided
                     warning!("No item provided, scanning all");
-                    scan_cwd(&exclude, scan_all, &vec![&"all".to_string()])?;
+                    scan_cwd(&exclude, scan_all, &[&"all".to_string()])?;
                 }
                 Err(e) => {
                     // Error when parsing
