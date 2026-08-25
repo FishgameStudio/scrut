@@ -1,7 +1,7 @@
 <!--This README has blanks to fill.-->
 # scrut
 
-[![CI](https://img.shields.io/github/actions/workflow/status/FishgameStudio/scrut/ci.yaml?branch=main)](https://github.com/FishgameStudio/scrut/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/FishgameStudio/scrut/ci.yaml?branch=dev)](https://github.com/FishgameStudio/scrut/actions/workflows/ci.yml)
 ![Stars](https://img.shields.io/github/stars/FishgameStudio/scrut)
 ![Rust](https://img.shields.io/badge/rust-1.70+-orange?logo=rust)
 ![Issues](https://img.shields.io/github/issues/FishgameStudio/scrut)
