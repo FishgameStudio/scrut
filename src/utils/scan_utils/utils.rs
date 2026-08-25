@@ -94,7 +94,7 @@ pub fn diagnostic_by_regex(rule: &Rule, file_content: &str, filename: &str) -> i
             let line_text = file_content.lines().collect::<Vec<_>>()[pos.line - 1];
             // Print error message
             print_msg(
-                format!("{}", kind2str(rule.kind), rule.prompt).as_str(),
+                format!("{}{}", kind2str(rule.kind), rule.prompt).as_str(),
                 filename,
                 &pos,
                 line_text,
