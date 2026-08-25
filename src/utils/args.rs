@@ -26,8 +26,8 @@ impl CommonFlags {
     /// Create new CommonFlags object.
     pub fn new(verbose: bool, confirm: bool) -> Self {
         Self {
-            verbose: verbose,
-            confirm: confirm,
+            verbose,
+            confirm,
         }
     }
 }
@@ -118,8 +118,8 @@ impl<'a> Parser<'a> {
             .subcommand(&docs);
 
         Self {
-            flags: flags,
-            root: root,
+            flags,
+            root,
         }
     }
 }
@@ -178,7 +178,7 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
                 Ok(Some(patterns)) => {
                     // Exclusion list provided
                     verbose!("Parsed argument -e, got patterns {:?}", patterns);
-                    patterns.map(|s: &String| s.clone()).collect()
+                    patterns.cloned().collect()
                 }
                 Ok(None) => {
                     // No exclusion

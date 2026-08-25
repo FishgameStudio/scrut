@@ -45,8 +45,9 @@ pub static OTHER: Lazy<Rule> = Lazy::new(|| {
 
 pub fn scan_hardcoded(s: &String, filename: &String) -> i32 {
     let mut total_error: i32 = 0;
-    total_error += diagnostic_by_regex(&*PATH, s, filename);
-    total_error += diagnostic_by_regex(&*URI, s, filename);
-    total_error += diagnostic_by_regex(&*OTHER, s, filename);
+    let filename = filename.as_str();
+    total_error += diagnostic_by_regex(&PATH, s, filename);
+    total_error += diagnostic_by_regex(&URI, s, filename);
+    total_error += diagnostic_by_regex(&OTHER, s, filename);
     total_error
 }

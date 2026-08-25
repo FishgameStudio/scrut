@@ -26,6 +26,7 @@ pub static EVIL_RULES: Lazy<Rule> = Lazy::new(|| {
 
 pub fn scan_evil(s: &String, filename: &String) -> i32 {
     let mut total_error: i32 = 0;
-    total_error += diagnostic_by_regex(&*EVIL_RULES, s, filename);
+    let filename = filename.as_str();
+    total_error += diagnostic_by_regex(&EVIL_RULES, s, filename);
     total_error
 }
