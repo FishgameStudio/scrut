@@ -25,10 +25,7 @@ pub struct CommonFlags {
 impl CommonFlags {
     /// Create new CommonFlags object.
     pub fn new(verbose: bool, confirm: bool) -> Self {
-        Self {
-            verbose,
-            confirm,
-        }
+        Self { verbose, confirm }
     }
 }
 
@@ -117,10 +114,7 @@ impl<'a> Parser<'a> {
             .subcommand(&fix)
             .subcommand(&docs);
 
-        Self {
-            flags,
-            root,
-        }
+        Self { flags, root }
     }
 }
 
