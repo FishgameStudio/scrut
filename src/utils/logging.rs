@@ -155,14 +155,15 @@ macro_rules! warning {
             let args = format_args!($($arg)*);
             let timestamp = this::now_str();
             let func = this::func_name!();
-            let line = format!("[{} in {}] {}\n", timestamp, func, args);
+            let line = format!("{}\n", args);
 
             eprint!("{} {}", this::yellow!("Warning:"), line);
 
             // Write to the log file.
             if let Ok(mut guard) = this::LOG_FILE.lock() {
                 if let Some(ref mut f) = *guard {
-                    let _ = f.write_all(format!("[w] {}", line).as_bytes());
+                    let line = format!("[w] [{} in {}] {}\n", timestamp, func, args);
+                    let _ = f.write_all(line.as_bytes());
                     let _ = f.flush();
                 }
             }
@@ -184,14 +185,15 @@ macro_rules! fatal {
             let func = this::func_name!();
             let curr_thread = thread::current();
             let thread_name = curr_thread.name().unwrap_or("main");
-            let line = format!("[{} thread '{}' panicked in '{}'] {}\n", thread_name, timestamp, func, args);
+            let line = format!("{}\n", args);
 
             eprint!("{} {}", this::red!("Fatal:"), line);
 
             // Write to the log file.
             if let Ok(mut guard) = this::LOG_FILE.lock() {
                 if let Some(ref mut f) = *guard {
-                    let _ = f.write_all(format!("[f] {}", line).as_bytes());
+                    let line = format!("[f] [{} thread '{}' panicked in '{}'] {}\n", thread_name, timestamp, func, args);
+                    let _ = f.write_all(line.as_bytes());
                     let _ = f.flush();
                 }
             }
