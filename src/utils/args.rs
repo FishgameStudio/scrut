@@ -271,10 +271,9 @@ pub fn parse_generate(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Err
             fatal!("Error when parsing argument '--range': {e}");
         }
     };
-    let range_int: Option<Range<i32>> = match &range_float {
-        Some(range) => Some((range.start as i32)..(range.end as i32)),
-        None => None,
-    };
+    let range_int: Option<Range<i32>> = range_float
+        .as_ref()
+        .map(|range| (range.start as i32)..(range.end as i32));
     let len: Option<usize> = match sub_matches.try_get_one::<usize>("len") {
         Ok(Some(val)) => Some(*val),
         Ok(None) => None, // fatal!("This argument is required but wasn't given"),
