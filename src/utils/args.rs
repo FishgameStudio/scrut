@@ -184,7 +184,7 @@ pub fn scan(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
         Ok(Some(patterns)) => {
             // Exclusion list provided
             verbose!("Parsed argument -e, got {} pattern(s)", patterns.len());
-            patterns.map(|s: &String| s.clone()).collect()
+            patterns.cloned().collect()
         }
         Ok(None) => {
             // No exclusion
@@ -205,7 +205,7 @@ pub fn scan(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
         Ok(None) => {
             // No item provided
             warning!("No item provided, scanning all");
-            scan_cwd(&exclude, scan_all, &vec![&"all".to_string()])?;
+            scan_cwd(&exclude, scan_all, &[&"all".to_string()])?;
         }
         Err(e) => {
             // Error when parsing
