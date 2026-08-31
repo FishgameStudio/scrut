@@ -152,7 +152,7 @@ pub fn print_log() {
         Some(path) => path,
         None => fatal!("Unable to get home directory"),
     };
-    let log_path = format!("{home:?}/scrut.log");
+    let log_path = format!("{}/scrut.log", home.display());
     verbose!("Printing log from log file {}", log_path);
     match exists(&log_path) {
         Err(e) => {
