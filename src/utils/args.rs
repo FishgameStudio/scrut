@@ -4,10 +4,12 @@
 
 use std::error;
 use std::fs::{exists, read_to_string};
+use std::ops::Range;
 use std::path::Path;
 
 use clap::{self, Arg, ArgMatches, Command};
 
+use crate::utils::generate::{generate, str2enum};
 use crate::utils::logging::{enable_verbose, fatal, init_log_file, verbose, warning};
 use crate::utils::scan::scan_cwd;
 use crate::utils::version::VERSION;
@@ -112,13 +114,37 @@ impl<'a> Parser<'a> {
                     .action(clap::ArgAction::SetTrue),
             );
 
+        let generate = Command::new("generate")
+            .alias("gen")
+            .arg(
+                Arg::new("item")
+                    .help("A positional argument to specify item to generate.")
+                    .required(true),
+            )
+            .arg(
+                Arg::new("len")
+                    .long("len")
+                    .short('l')
+                    .help("Specify length of the password, if the item is `password`.")
+                    .required(false),
+            )
+            .arg(
+                Arg::new("range")
+                    .long("range")
+                    .short('r')
+                    .help("Specify range of the random number, if the item is `rand*`.")
+                    .required(false)
+                    .num_args(2),
+            );
+
         // Add subcommands.
         let root = root
             .subcommand(&version)
             .subcommand(&scan)
             .subcommand(&fix)
             .subcommand(&docs)
-            .subcommand(&log);
+            .subcommand(&log)
+            .subcommand(&generate);
 
         Self { flags, root }
     }
@@ -179,7 +205,7 @@ pub fn print_log() {
 /// If failed to parse argument `-e --exclude`.
 /// # Errors
 /// If failed to scan current working directory.
-pub fn scan(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
+pub fn parse_scan(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     let scan_all = sub_matches.get_flag("scan-all");
     let exclude: Vec<String> = match sub_matches.try_get_many("exclude") {
         Ok(Some(patterns)) => {
@@ -213,6 +239,47 @@ pub fn scan(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
             fatal!("Error when parsing argument `item`: {}", e);
         }
     };
+    Ok(())
+}
+
+/// Parse given `ArgMatches` object and do generate.
+/// # Panics
+/// If the item is unknown, or error during parsing.
+pub fn parse_generate(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
+    let item: &String = match sub_matches.try_get_one("item") {
+        Ok(Some(name)) => name,
+        Ok(None) => {
+            fatal!("This command requires a positional argument 'item' but 0 was given")
+        }
+        Err(e) => fatal!("Error when parsing positional argument 'item': {e}"),
+    };
+    let range_float: Option<Range<f64>> = match sub_matches.try_get_many::<f64>("range") {
+        Ok(Some(range)) => {
+            let range: Vec<f64> = range.cloned().collect();
+            if range.len() < 2 {
+                fatal!(
+                    "This argument requires 2 values but {} was given",
+                    range.len()
+                );
+            }
+            Some(range[0]..range[1])
+        }
+        Ok(None) => None, // fatal!("This argument requires 2 values but 0 was given");
+        Err(e) => {
+            fatal!("Error when parsing argument '--range': {e}");
+        }
+    };
+    let range_int: Option<Range<i32>> = match &range_float {
+        Some(range) => Some((range.start as i32)..(range.end as i32)),
+        None => None,
+    };
+    let len: Option<usize> = match sub_matches.try_get_one::<usize>("len") {
+        Ok(Some(val)) => Some(*val),
+        Ok(None) => None, // fatal!("This argument is required but wasn't given"),
+        Err(e) => fatal!("Error when parsing argument 'len': {e}"),
+    };
+    let item = str2enum(item, len, range_int, range_float);
+    generate(item);
     Ok(())
 }
 
@@ -255,12 +322,16 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
         }
         Some(("scan", sub_matches)) => {
             // Command `scan`
-            scan(sub_matches)?;
+            parse_scan(sub_matches)?;
         }
         #[allow(unused)]
         Some(("fix", sub_matches)) => {
             // Command `fix`
             todo!("Implement command `fix`")
+        }
+        Some(("generate", sub_matches)) => {
+            // Command `generate` or its alias `gen`
+            parse_generate(sub_matches)?;
         }
         None => fatal!("Must provide a command"),
         Some((cmd, _)) => fatal!("Unknown command: {}", cmd),
