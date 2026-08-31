@@ -117,7 +117,8 @@ impl<'a> Parser<'a> {
             .subcommand(&version)
             .subcommand(&scan)
             .subcommand(&fix)
-            .subcommand(&docs);
+            .subcommand(&docs)
+            .subcommand(&log);
 
         Self { flags, root }
     }
