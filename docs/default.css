@@ -85,7 +85,8 @@ summary::after {
     color: #d62828;
 }
 
-.faq {
+.faq,
+.ref {
     margin: 8px 0 8px 22px;
     background-color: #eec897;
     border-left: 4px solid #a47b34;
