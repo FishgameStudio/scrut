@@ -5,6 +5,8 @@ use crate::utils::scan::ItemType as it;
 
 use regex::Regex;
 
+use owo_colors::OwoColorize;
+
 /// Regex struct for message printing.
 #[derive(Debug, Clone)]
 pub struct Rule {
@@ -63,13 +65,13 @@ pub fn scan_matched(s: &str, pattern: &Regex) -> Vec<MatchPos> {
 /// Print the error message.
 #[inline]
 pub fn print_msg(prompt: &str, filename: &str, pos: &MatchPos, line_text: &str) {
-    eprintln!("{prompt}: file {filename}, line {}:", pos.line);
-    eprintln!("{} | {line_text}", pos.line);
+    eprintln!("{}: file {filename}, line {}:", prompt.purple(), pos.line);
+    eprintln!("{} {} {line_text}", pos.line, "|".red().bold());
     eprintln!(
         "{}   {}{}{}",
         " ".repeat(pos.line.to_string().len()), // number of digits
         " ".repeat(pos.start),                  // previous spaces
-        "^".repeat(pos.end - pos.start),        // underline error contents
+        "^".repeat(pos.end - pos.start).red().bold(), // underline error contents
         " ".repeat(line_text.len() - pos.end)   // rest spaces
     );
 }

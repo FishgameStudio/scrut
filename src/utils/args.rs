@@ -18,6 +18,8 @@ use dirs::home_dir;
 
 use open::that;
 
+use owo_colors::OwoColorize;
+
 #[allow(unused)]
 #[derive(Debug)]
 /// Common flags, like -v --verbose.
@@ -162,7 +164,11 @@ pub fn open_local_docs() {
         Err(e) => fatal!("Unable to access documentation html: {}", e),
     }
     let doc_path = Path::new("./docs/index.html").canonicalize().unwrap();
-    println!("Opening html page: {}", doc_path.to_str().unwrap());
+    println!(
+        "{} {}",
+        "Opening html page:".green(),
+        doc_path.to_str().unwrap()
+    );
     verbose!("Opening html page: {}", doc_path.to_str().unwrap());
     if let Err(e) = that(doc_path.as_os_str()) {
         fatal!(

@@ -10,6 +10,8 @@ use crate::utils::scan_utils::{
     evil::scan_evil, hardcoded::scan_hardcoded, quality::scan_quality, secrets::scan_secrets,
 };
 
+use owo_colors::OwoColorize;
+
 /// Determine whether a file matches a wildcard syntax.
 fn is_match(pattern: &str, rel_path_unix: &str) -> bool {
     let glob_res = Glob::new(pattern);
@@ -223,11 +225,11 @@ pub fn scan_cwd(
     scan_files(&mut action, &cwd_str.to_string())?;
 
     if issues > 0 {
-        eprintln!("\nOh no!");
+        eprintln!("\n{}", "Oh no! 💥".red().bold());
         eprintln!("{issues} issues found.");
         verbose!("{issues} issues found");
     } else {
-        println!("No issues found!");
+        println!("{}", "No issues found!".green().bold());
         verbose!("No issues found");
     }
 
