@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Scrut Docs - Command generate</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../default.css">
+</head>
+
+<body>
+    <nav>
+        <a href="../index.html">Home Page</a>
+        <a href="javascript:history.back()">Back</a>
+    </nav>
+    <h2>Name</h2>
+    <code>scrut generate</code> &middot; Generate specified items.
+    <h2>Synopsis</h2>
+    <pre>
+        scrut [generate|gen] &lt;ITEM&gt; [-l|--len &lt;length&gt;] [-r|--range &lt;start&gt; &lt;end&gt;]
+    </pre>
+    <h2>Description</h2>
+    Generate one specified item and print it.
+    The item is <b>required and single</b>, it includes:
+    <ul>
+        <li><code>password</code>&colon; A strong password</li>
+        <li><code>randint</code>&colon; A random integer</li>
+        <li><code>randfloat</code>&colon; A random floating-point number</li>
+    </ul>
+    <h2>Options</h2>
+    <ul>
+        <li><code>&minus;l,--len</code>&colon; The length of the password. It is necessary if the item is password.</li>
+        <li><code>&minus;r,--range</code>&colon; The range of the random number. It's necessary if the item is rand*.
+        </li>
+    </ul>
+    <h2>Panics</h2>
+    Panics if the necessary arguments wasn't given.
+</body>
+
+</html>
