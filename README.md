@@ -5,7 +5,7 @@
 ![Rust](https://img.shields.io/badge/rust-1.70+-orange?logo=rust)
 ![Issues](https://img.shields.io/github/issues/FishgameStudio/scrut)
 ![PRs](https://img.shields.io/github/issues-pr/FishgameStudio/scrut)
-![License](https://img.shields.io/github/license/FishgameStudio/scrut)
+[![License](https://img.shields.io/github/license/FishgameStudio/scrut)](LICENSE)
 
 **Scrut** is a lightweight Rust CLI tool for code scrutiny.
 

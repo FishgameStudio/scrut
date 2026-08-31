@@ -43,7 +43,8 @@ pub static TODO: Lazy<Rule> = Lazy::new(|| {
 
 pub fn scan_quality(s: &String, filename: &String) -> i32 {
     let mut total_error: i32 = 0;
-    total_error += diagnostic_by_regex(&*BAD, s, filename);
-    total_error += diagnostic_by_regex(&*TODO, s, filename);
+    let filename = filename.as_str();
+    total_error += diagnostic_by_regex(&BAD, s, filename);
+    total_error += diagnostic_by_regex(&TODO, s, filename);
     total_error
 }

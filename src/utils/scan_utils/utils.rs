@@ -5,13 +5,14 @@ use crate::utils::scan::ItemType as it;
 
 use regex::Regex;
 
-/// Regex struct for message printting.
+/// Regex struct for message printing.
 #[derive(Debug, Clone)]
 pub struct Rule {
     pub prompt: &'static str,
     pub kind: it,
     pub regex: Vec<Regex>, // owned
 }
+
 impl Rule {
     /// Create a new `Rule` object.
     pub fn new(prompt: &'static str, kind: it, regex: Vec<Regex>) -> Self {
@@ -30,6 +31,7 @@ pub struct MatchPos {
     pub start: usize,
     pub end: usize,
 }
+
 impl MatchPos {
     /// Create a new `MatchPos` object.
     pub fn new(line: usize, start: usize, end: usize) -> Self {
@@ -45,7 +47,7 @@ impl MatchPos {
 /// offset for every regex match located within the given input string.
 #[inline]
 #[must_use = "Do not discard returned value"]
-pub fn scan_matched(s: &String, pattern: &Regex) -> Vec<MatchPos> {
+pub fn scan_matched(s: &str, pattern: &Regex) -> Vec<MatchPos> {
     verbose!("Scanning matches of regex {pattern}");
     let mut res: Vec<MatchPos> = Vec::new();
     for (line_idx, line) in s.lines().enumerate() {
@@ -60,7 +62,7 @@ pub fn scan_matched(s: &String, pattern: &Regex) -> Vec<MatchPos> {
 
 /// Print the error message.
 #[inline]
-pub fn print_msg(prompt: &str, filename: &String, pos: &MatchPos, line_text: &str) -> () {
+pub fn print_msg(prompt: &str, filename: &str, pos: &MatchPos, line_text: &str) {
     eprintln!("{prompt}: file {filename}, line {}:", pos.line);
     eprintln!("{} | {line_text}", pos.line);
     eprintln!(
@@ -83,8 +85,8 @@ fn kind2str(kind: it) -> &'static str {
 }
 
 #[must_use = "Do not discard returned value"]
-/// Traverse all given regex, get scaned error, print message and return number of messages.
-pub fn diagnostic_by_regex(rule: &Rule, file_content: &String, filename: &String) -> i32 {
+/// Traverse all given regex, get scanned error, print message and return number of messages.
+pub fn diagnostic_by_regex(rule: &Rule, file_content: &str, filename: &str) -> i32 {
     let mut err_cnt = 0;
     for pattern in &rule.regex {
         let mat = scan_matched(file_content, pattern);

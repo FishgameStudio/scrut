@@ -50,9 +50,10 @@ pub static OTHER_RULES: Lazy<Rule> = Lazy::new(|| {
 
 /// Scan personal informations and secrets in file contents.
 pub fn scan_secrets(s: &String, filename: &String) -> i32 {
+    let filename = filename.as_str();
     let mut total_errors = 0;
-    total_errors += diagnostic_by_regex(&*TOKEN_RULES, s, filename);
-    total_errors += diagnostic_by_regex(&*PASSWORD_RULES, s, filename);
-    total_errors += diagnostic_by_regex(&*OTHER_RULES, s, filename);
+    total_errors += diagnostic_by_regex(&TOKEN_RULES, s, filename);
+    total_errors += diagnostic_by_regex(&PASSWORD_RULES, s, filename);
+    total_errors += diagnostic_by_regex(&OTHER_RULES, s, filename);
     total_errors
 }
