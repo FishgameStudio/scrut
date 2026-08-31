@@ -233,3 +233,51 @@ pub fn scan_cwd(
 
     Ok(())
 }
+
+/// Unit tests
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_match_wildcards() {
+        use super::is_match;
+        assert!(is_match("/home/**", "/home/abc/abc.txt"));
+        assert!(is_match("/tmp/*.tmp", "/tmp/xxx.tmp"));
+        assert!(is_match("Cargo.*", "Cargo.lock"));
+        assert!(is_match("q????y.t?t", "qwerty.txt"));
+        assert!(!is_match("[abc].toml", "d.toml"));
+        assert!(!is_match("[a-z].json", "A.json"));
+        assert!(!is_match("[!a-z].json", "a.json"));
+        assert!(!is_match("*.*", "abc"));
+    }
+    #[test]
+    fn test_str2enum_conversion() {
+        use super::{ItemType, str2enum};
+        assert_eq!(str2enum("all") as u64, ItemType::All as u64);
+        assert_eq!(str2enum("evil") as u64, ItemType::Evil as u64);
+        assert_eq!(str2enum("secrets") as u64, ItemType::Secrets as u64);
+        assert_eq!(str2enum("quality") as u64, ItemType::Quality as u64);
+        assert_eq!(str2enum("hardcoded") as u64, ItemType::Hardcoded as u64);
+        assert_eq!(str2enum("*") as u64, ItemType::All as u64);
+    }
+    #[test]
+    fn test_bitmask() {
+        use super::{ItemType, bit_mask};
+        assert!(bit_mask(ItemType::All as u64, ItemType::Evil));
+        assert!(bit_mask(
+            (ItemType::Evil as u64) | (ItemType::Hardcoded as u64),
+            ItemType::Hardcoded
+        ));
+        assert!(!bit_mask(ItemType::Evil as u64, ItemType::Quality));
+        assert!(!bit_mask(0_u64, ItemType::All));
+    }
+    #[test]
+    fn test_glob_meta() {
+        use super::is_glob_meta;
+        assert!(is_glob_meta("*"));
+        assert!(is_glob_meta("abc*??"));
+        assert!(is_glob_meta("[a]bc"));
+        assert!(is_glob_meta("[a-z].json"));
+        assert!(!is_glob_meta("abc"));
+        assert!(!is_glob_meta("Cargo.lock"));
+    }
+}
