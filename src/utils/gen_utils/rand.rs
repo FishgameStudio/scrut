@@ -14,3 +14,16 @@ pub fn gen_randfloat(range: Range<f64>) -> f64 {
     let mut rng = rand::rng();
     rng.random_range::<f64, Range<f64>>(range)
 }
+
+/// Unit tests
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn random_test() {
+        use super::*;
+        let i = gen_randint(1..100);
+        let f = gen_randfloat(1.9..25.2);
+        assert!(0 < i && i < 100);
+        assert!(1.9 <= f && f < 25.2);
+    }
+}
