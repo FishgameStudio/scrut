@@ -50,7 +50,7 @@ pub static LOG_FILE: Mutex<Option<File>> = Mutex::new(None);
 /// Max size of log file.
 pub const MAX_LOG_BYTES: u64 = 10 * 1024 * 1024;
 
-/// Initialize log file, call once at program start(main).
+/// Initialize log file, call once at program start (main).
 /// Always open log file, independent of verbose flag.
 /// # Examples
 /// ```
