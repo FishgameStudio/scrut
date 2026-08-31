@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Scrut Docs - Command docs</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../default.css">
+</head>
+
+<body>
+    <nav>
+        <a href="../index.html">Home Page</a>
+        <a href="javascript:history.back()">Back</a>
+    </nav>
+    <h2>Name</h2>
+    <code>scrut log</code> &middot; Print contents of the log file.
+    <h2>Synopsis</h2>
+    <pre>
+        scrut log
+    </pre>
+    <h2>Description</h2>
+    Print full contents of the log file without any pager. You can execute this command to page printing:
+    <pre>
+        scrut log | more
+    </pre>
+    <h2>Options</h2>
+    This command has no extra command-line options.
+    <h2>Panics</h2>
+    Panics if unable to access the log file (<code>~/scrut.log</code>).
+    <div class="ref">
+        Note: In the vast majority of cases, it will not panic because the log system is <b>already initialized</b>
+        before executing this command.
+    </div>
+</body>
+
+</html>
