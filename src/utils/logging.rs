@@ -54,10 +54,11 @@ pub const MAX_LOG_BYTES: u64 = 10 * 1024 * 1024;
 /// Always open log file, independent of verbose flag.
 /// # Examples
 /// ```
+/// use scrut::logging::init_log_file;
 /// use std::error::Error;
-/// fn main() -> Result<(), Box<dyn Error>> {
+/// fn main() {
 ///     init_log_file(None);           // Init with default size.
-///     init_log_file(Some(5 * 1024 * 1024)) // Init with specified size.
+///     init_log_file(Some(5 * 1024 * 1024)); // Init with specified size.
 /// }
 /// ```
 pub fn init_log_file(max_log_bytes: Option<u64>) -> io::Result<()> {
