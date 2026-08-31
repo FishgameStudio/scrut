@@ -2,14 +2,17 @@
 //! Before initialization of log system, **do not** use log macros in [`crate::utils::logging`].
 //! Note: The log system is initialized by [`crate::utils::logging::init_log_file`].
 
+use std::error;
+use std::fs::{exists, read_to_string};
 use std::path::Path;
-use std::{error, fs::exists};
 
-use clap::{self, Arg, Command};
+use clap::{self, Arg, ArgMatches, Command};
 
 use crate::utils::logging::{enable_verbose, fatal, init_log_file, verbose, warning};
 use crate::utils::scan::scan_cwd;
 use crate::utils::version::VERSION;
+
+use dirs::home_dir;
 
 use open::that;
 
@@ -74,6 +77,8 @@ impl<'a> Parser<'a> {
 
         let docs = Command::new("docs");
 
+        let log = Command::new("log");
+
         let scan = Command::new("scan")
             .arg(
                 Arg::new("item") // Positional argument
@@ -124,6 +129,98 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// Open local documentation files of scrut.
+/// # Panics
+/// If unable to access the documentation files.
+pub fn open_local_docs() {
+    match exists("./docs/index.html") {
+        Ok(true) => {}
+        Ok(false) => fatal!("Documentation html not found"),
+        Err(e) => fatal!("Unable to access documentation html: {}", e),
+    }
+    let doc_path = Path::new("./docs/index.html").canonicalize().unwrap();
+    println!("Opening html page: {}", doc_path.to_str().unwrap());
+    verbose!("Opening html page: {}", doc_path.to_str().unwrap());
+    if let Err(e) = that(doc_path.as_os_str()) {
+        fatal!(
+            "Unable to open html page {}: {}",
+            doc_path.to_str().unwrap(),
+            e
+        );
+    }
+}
+/// Print log from the log file. The path of log is `~/scrut.log` on by default.
+/// # Panics
+/// If unable to access the log file.
+pub fn print_log() {
+    let home = match home_dir() {
+        Some(path) => path,
+        None => fatal!("Unable to get home directory"),
+    };
+    let log_path = format!("{home:?}/scrut.log");
+    verbose!("Printing log from log file {}", log_path);
+    match exists(&log_path) {
+        Err(e) => {
+            fatal!("Unable to access log file '{}': {}", log_path, e);
+        }
+        Ok(option) => {
+            if option {
+                // Show contents of the log file by the default program.
+                match read_to_string(&log_path) {
+                    Ok(content) => {
+                        println!("{}", content);
+                    }
+                    Err(e) => fatal!("Unable to read log file '{}': {}", log_path, e),
+                }
+            } else {
+                fatal!("Log file not found: {}", log_path);
+            }
+        }
+    }
+}
+
+/// Do basic scan actions with given argument matches.
+/// # Panics
+/// If failed to parse argument `-e --exclude`.
+/// # Errors
+/// If failed to scan current working directory.
+pub fn scan(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
+    let scan_all = sub_matches.get_flag("scan-all");
+    let exclude: Vec<String> = match sub_matches.try_get_many("exclude") {
+        Ok(Some(patterns)) => {
+            // Exclusion list provided
+            verbose!("Parsed argument -e, got {} pattern(s)", patterns.len());
+            patterns.map(|s: &String| s.clone()).collect()
+        }
+        Ok(None) => {
+            // No exclusion
+            verbose!("Parsed argument -e, got 0 patterns");
+            vec![]
+        }
+        Err(e) => {
+            // Error when parsing
+            fatal!("Error when parsing argument `exclude`: {}", e);
+        }
+    };
+    match sub_matches.try_get_many::<String>("item") {
+        Ok(Some(items)) => {
+            // Item provided
+            let items: Vec<&String> = items.collect();
+            scan_cwd(&exclude, scan_all, &items)?;
+        }
+        Ok(None) => {
+            // No item provided
+            warning!("No item provided, scanning all");
+            scan_cwd(&exclude, scan_all, &vec![&"all".to_string()])?;
+        }
+        Err(e) => {
+            // Error when parsing
+            fatal!("Error when parsing argument `item`: {}", e);
+        }
+    };
+    Ok(())
+}
+
 /// Parse arguments and run their corresponding task.
 /// # Panics
 /// If no command provided or unknown command.
@@ -155,57 +252,15 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
         }
         Some(("docs", _)) => {
             // Command `docs`
-            match exists("./docs/index.html") {
-                Ok(true) => {}
-                Ok(false) => fatal!("Documentation html not found"),
-                Err(e) => fatal!("Unable to access documentation html: {}", e),
-            }
-            let doc_path = Path::new("./docs/index.html").canonicalize().unwrap();
-            println!("Opening html page: {}", doc_path.to_str().unwrap());
-            verbose!("Opening html page: {}", doc_path.to_str().unwrap());
-            if let Err(e) = that(doc_path.as_os_str()) {
-                fatal!(
-                    "Unable to open html page {}: {}",
-                    doc_path.to_str().unwrap(),
-                    e
-                );
-            }
+            open_local_docs();
+        }
+        Some(("log", _)) => {
+            // Command `log`
+            print_log();
         }
         Some(("scan", sub_matches)) => {
             // Command `scan`
-            let scan_all = sub_matches.get_flag("scan-all");
-            let exclude: Vec<String> = match sub_matches.try_get_many("exclude") {
-                Ok(Some(patterns)) => {
-                    // Exclusion list provided
-                    verbose!("Parsed argument -e, got patterns {:?}", patterns);
-                    patterns.map(|s: &String| s.clone()).collect()
-                }
-                Ok(None) => {
-                    // No exclusion
-                    verbose!("Parsed argument -e, got 0");
-                    vec![]
-                }
-                Err(e) => {
-                    // Error when parsing
-                    fatal!("Error when parsing argument `exclude`: {}", e);
-                }
-            };
-            match sub_matches.try_get_many::<String>("item") {
-                Ok(Some(items)) => {
-                    // Item provided
-                    let items: Vec<&String> = items.collect();
-                    scan_cwd(&exclude, scan_all, &items)?;
-                }
-                Ok(None) => {
-                    // No item provided
-                    warning!("No item provided, scanning all");
-                    scan_cwd(&exclude, scan_all, &vec![&"all".to_string()])?;
-                }
-                Err(e) => {
-                    // Error when parsing
-                    fatal!("Error when parsing argument `item`: {}", e);
-                }
-            }
+            scan(sub_matches)?;
         }
         #[allow(unused)]
         Some(("fix", sub_matches)) => {
@@ -213,7 +268,8 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
             todo!("Implement command `fix`")
         }
         None => fatal!("Must provide a command"),
-        _ => fatal!("Unknown command"),
+        Some((cmd, _)) => fatal!("Unknown command: {}", cmd),
     }
+
     Ok(())
 }
