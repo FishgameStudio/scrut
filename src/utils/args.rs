@@ -7,7 +7,7 @@ use std::fs::{exists, read_to_string};
 use std::ops::Range;
 use std::path::Path;
 
-use clap::{self, Arg, ArgMatches, Command};
+use clap::{self, Arg, ArgMatches, Command, value_parser};
 
 use crate::utils::generate::{generate, str2enum};
 use crate::utils::logging::{enable_verbose, fatal, init_log_file, verbose, warning};
@@ -126,6 +126,7 @@ impl<'a> Parser<'a> {
                     .long("len")
                     .short('l')
                     .help("Specify length of the password, if the item is `password`.")
+                    .value_parser(value_parser!(usize))
                     .required(false),
             )
             .arg(
@@ -134,6 +135,7 @@ impl<'a> Parser<'a> {
                     .short('r')
                     .help("Specify range of the random number, if the item is `rand*`.")
                     .required(false)
+                    .value_parser(value_parser!(f64))
                     .num_args(2),
             );
 
@@ -279,7 +281,7 @@ pub fn parse_generate(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Err
         Err(e) => fatal!("Error when parsing argument 'len': {e}"),
     };
     let item = str2enum(item, len, range_int, range_float);
-    generate(item);
+    println!("{}", generate(item));
     Ok(())
 }
 
