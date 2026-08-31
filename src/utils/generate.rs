@@ -24,9 +24,18 @@ pub fn str2enum(
     verbose!("Matching string {s}");
     use GenerationItemType::*;
     match s {
-        "password" => Password(password_len.unwrap()),
-        "randint" => RandInt(randint_range.unwrap()),
-        "randfloat" => RandFloat(randfloat_range.unwrap()),
+        "password" => Password(match password_len {
+            Some(len) => len,
+            None => fatal!("Argument 'len' is required if the item specified as 'password'"),
+        }),
+        "randint" => RandInt(match randint_range {
+            Some(range) => range,
+            None => fatal!("Argument 'range' is required if the item specified as 'randint'"),
+        }),
+        "randfloat" => RandFloat(match randfloat_range {
+            Some(range) => range,
+            None => fatal!("Argument 'range' is required if the item specified as 'randfloat'"),
+        }),
         item => fatal!("Unknown type of item: {item}"),
     }
 }
