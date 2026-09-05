@@ -48,7 +48,7 @@ pub static VERBOSE_LOGGING: AtomicBool = AtomicBool::new(false);
 pub static LOG_FILE: Mutex<Option<File>> = Mutex::new(None);
 
 /// Max size of log file.
-pub const MAX_LOG_BYTES: u64 = 10 * 1024 * 1024;
+pub const MAX_LOG_BYTES: u64 = 15 * 1024 * 1024;
 
 /// Initialize log file, call once at program start (main).
 /// Always open log file, independent of verbose flag.
@@ -117,6 +117,7 @@ pub(crate) use func_name;
 
 /// Verbose logging
 macro_rules! verbose {
+    () => {};
     ($($arg:tt)*) => {
         {
             use std::io::Write;
@@ -149,6 +150,7 @@ pub(crate) use verbose;
 
 /// Print warning message and write into the log file.
 macro_rules! warning {
+    () => {};
     ($($arg:tt)*) => {
         {
             use std::io::Write;
@@ -174,8 +176,9 @@ macro_rules! warning {
 pub(crate) use warning;
 
 /// Print fatal message and write into the log file.
-/// This macro will **automatically terminate this program** if matched arm #0.
+/// This macro will **automatically terminate this program** if matched arm #1.
 macro_rules! fatal {
+    () => {};  // arm #0
     ($($arg:tt)*) => {
         {
             use std::io::Write;
