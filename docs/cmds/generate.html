@@ -17,7 +17,7 @@
     <code>scrut generate</code> &middot; Generate specified items.
     <h2>Synopsis</h2>
     <pre>
-        scrut [generate|gen] &lt;ITEM&gt; [-l|--len &lt;length&gt;] [-r|--range &lt;start&gt; &lt;end&gt;]
+        scrut [generate|gen] &lt;ITEM&gt; [-l|--len &lt;length&gt;] [-r|--range &lt;start&gt; &lt;end&gt;] [-c|--content &lt;string&gt;] [--from-file &lt;filename&gt;]
     </pre>
     <h2>Description</h2>
     Generate one specified item and print it.
@@ -26,12 +26,22 @@
         <li><code>password</code>&colon; A strong password</li>
         <li><code>randint</code>&colon; A random integer</li>
         <li><code>randfloat</code>&colon; A random floating-point number</li>
+        <li><code>sha256</code>&colon; SHA256 hash of a specified content or file</li>
+        <li><code>checksum</code>&colon; A Standard checksum file named <code>SHA256SUMS</code></li>
     </ul>
     <h2>Options</h2>
     <ul>
-        <li><code>&minus;l,--len</code>&colon; The length of the password. It is necessary if the item is password.</li>
-        <li><code>&minus;r,--range</code>&colon; The range of the random number. It's necessary if the item is rand*.
+        <li><code>&minus;l,--len</code>&colon; The length of something. It is necessary if the item needs a valid
+            length.</li>
+        <li><code>&minus;r,--range</code>&colon; The range of something. It's necessary if the item needs a specified
+            range.
         </li>
+        <li><code>&minus;c,--content</code>&colon; The content to generate SHA256 hash. It's necessary if the item needs
+            complete content.</li>
+        <li><code>--from-file</code>&colon; The name of the file. The program will read content of the specified file
+            and pass the content to the <code>--content</code> param. The option <code>--from-file</code> has higher
+            priority than the option <code>--content</code>. It's necessary if the option <code>--content</code> is
+            necessary.</li>
     </ul>
     <h2>Panics</h2>
     Panics if the necessary arguments wasn't given.
