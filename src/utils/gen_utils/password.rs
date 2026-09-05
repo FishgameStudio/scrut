@@ -2,6 +2,8 @@
 
 use rand::{self, RngExt};
 
+use crate::utils::logging::verbose;
+
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                         abcdefghijklmnopqrstuvwxyz\
                         0123456789\
@@ -9,12 +11,13 @@ const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
 
 /// Generates a secure password with given length.
 pub fn gen_password(len: usize) -> String {
-    let mut rng = rand::rng();
+    verbose!("Generating password with specified length {len} ...");
     let mut password = String::with_capacity(len);
     for _ in 0..len {
-        let idx = rng.random_range(0..CHARSET.len());
+        let idx = rand::rng().random_range(0..CHARSET.len());
         password.push(CHARSET[idx] as char);
     }
+    verbose!("Done");
     password
 }
 
