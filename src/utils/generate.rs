@@ -1,5 +1,6 @@
 //! Generates specified items.
 
+use crate::utils::confirm::{DefaultOpt, confirm, get_confirm_flag};
 use crate::utils::gen_utils::{
     password::gen_password, rand::gen_randfloat, rand::gen_randint, sha256::gen_checksums,
     sha256::gen_sha256,
@@ -69,6 +70,12 @@ pub fn generate(item: GenerationItemType) -> String {
             Ok(s) => {
                 // Write to the file `SHA256SUMS` first.
                 const CHECKSUMS_FILE: &str = "./SHA256SUMS";
+                if get_confirm_flag() {
+                    confirm(
+                        &format!("Save checksum content to file '{CHECKSUMS_FILE}'?'"),
+                        DefaultOpt::Yes,
+                    )
+                }
                 verbose!("Saving checksums to file {CHECKSUMS_FILE:?} ...");
                 if let Err(e) = write("./SHA256SUMS", &s) {
                     fatal!("Failed to save checksums to file {CHECKSUMS_FILE}: {e}");

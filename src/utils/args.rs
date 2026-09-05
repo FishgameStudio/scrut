@@ -10,6 +10,7 @@ use std::path::Path;
 use clap::{ArgMatches, Command};
 
 use crate::utils::command::get_root_command_object;
+use crate::utils::confirm::set_confirm_flag;
 use crate::utils::generate::{generate, str2enum};
 use crate::utils::logging::{enable_verbose, fatal, init_log_file, verbose, warning};
 use crate::utils::scan::scan_cwd;
@@ -217,7 +218,7 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
         enable_verbose();
     }
     if matches.get_flag("confirm") {
-        todo!("Enable confirm before actions")
+        set_confirm_flag(true);
     }
     // Initialize log system.
     // You can log below this match statement!

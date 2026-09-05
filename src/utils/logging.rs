@@ -174,13 +174,14 @@ macro_rules! warning {
 pub(crate) use warning;
 
 /// Print fatal message and write into the log file.
-/// This macro will **automatically panic** if matched arm #0.
+/// This macro will **automatically terminate this program** if matched arm #0.
 macro_rules! fatal {
     ($($arg:tt)*) => {
         {
             use std::io::Write;
             use crate::utils::logging as this;
             use std::thread;
+            use std::process::exit;
             let args = format_args!($($arg)*);
             let timestamp = this::now_str();
             let func = this::func_name!();
@@ -193,17 +194,17 @@ macro_rules! fatal {
             // Write to the log file.
             if let Ok(mut guard) = this::LOG_FILE.lock() {
                 if let Some(ref mut f) = *guard {
-                    let line = format!("[f] [{} thread '{}' panicked in '{}'] {}\n", thread_name, timestamp, func, args);
+                    let line = format!("[f] [{} thread '{}' terminated in '{}'] {}\n", thread_name, timestamp, func, args);
                     let _ = f.write_all(line.as_bytes());
                     let _ = f.flush();
                 }
             }
 
-            // Panic
-            panic!("{}", args);
+            // Terminate current program.
+            exit(1);
         }
     };
-    (no_panic; $($arg:tt)*) => {
+    (no_exit; $($arg:tt)*) => {
         {
             use std::io::Write;
             use std::thread;
