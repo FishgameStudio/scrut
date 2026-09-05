@@ -112,12 +112,12 @@ pub(crate) fn get_root_command_object() -> Command {
         );
 
     // Add subcommands.
-    let root = root
+    
+    root
         .subcommand(&version)
         .subcommand(&scan)
         .subcommand(&fix)
         .subcommand(&docs)
         .subcommand(&log)
-        .subcommand(&generate);
-    root
+        .subcommand(&generate)
 }
