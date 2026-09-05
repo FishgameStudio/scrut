@@ -7,8 +7,9 @@ use std::fs::{exists, read_to_string};
 use std::ops::Range;
 use std::path::Path;
 
-use clap::{self, Arg, ArgMatches, Command, value_parser};
+use clap::{ArgMatches, Command};
 
+use crate::utils::command::get_root_command_object;
 use crate::utils::generate::{generate, str2enum};
 use crate::utils::logging::{enable_verbose, fatal, init_log_file, verbose, warning};
 use crate::utils::scan::scan_cwd;
@@ -49,106 +50,7 @@ pub struct Parser<'a> {
 impl<'a> Parser<'a> {
     /// Create a new `Parser` object with specified CommonFlags object.
     pub fn new(flags: &'a CommonFlags) -> Self {
-        // Root command
-        let root = Command::new("scrut")
-            .arg(
-                Arg::new("verbose")
-                    .short('v')
-                    .long("verbose")
-                    .help("Enable verbose logging")
-                    .action(clap::ArgAction::SetTrue),
-            )
-            .arg(
-                Arg::new("confirm")
-                    .short('c')
-                    .long("confirm")
-                    .help("Confirm before actions")
-                    .action(clap::ArgAction::SetTrue),
-            )
-            .arg(
-                Arg::new("max-log-size")
-                    .long("max-log-size")
-                    .value_name("MB")
-                    .help("Specify maximum size (MiB) of the log file.")
-                    .required(false)
-                    .value_parser(clap::value_parser!(u64)),
-            );
-
-        let version = Command::new("version");
-
-        let docs = Command::new("docs");
-
-        let log = Command::new("log");
-
-        let scan = Command::new("scan")
-            .arg(
-                Arg::new("item") // Positional argument
-                    .help("Specify items to scan")
-                    .required(false)
-                    .num_args(1..),
-            )
-            .arg(
-                Arg::new("exclude")
-                    .short('e')
-                    .long("exclude")
-                    .help("Specify excluded files")
-                    .required(false)
-                    .num_args(0..),
-            )
-            .arg(
-                Arg::new("scan-all")
-                    .short('a')
-                    .long("scan-all")
-                    .help("Scan all files in current working directory")
-                    .action(clap::ArgAction::SetTrue),
-            );
-
-        let fix = Command::new("fix")
-            .arg(
-                Arg::new("item") // Positional argument
-                    .help("Specify items to fix")
-                    .required(false), // Fix all issues in default.
-            )
-            .arg(
-                Arg::new("fix-unsafe")
-                    .long("fix-unsafe") // No short names
-                    .help("Fix issues may modify code behavior.")
-                    .action(clap::ArgAction::SetTrue),
-            );
-
-        let generate = Command::new("generate")
-            .alias("gen")
-            .arg(
-                Arg::new("item")
-                    .help("A positional argument to specify item to generate.")
-                    .required(true),
-            )
-            .arg(
-                Arg::new("len")
-                    .long("len")
-                    .short('l')
-                    .help("Specify length of the password, if the item is `password`.")
-                    .value_parser(value_parser!(usize))
-                    .required(false),
-            )
-            .arg(
-                Arg::new("range")
-                    .long("range")
-                    .short('r')
-                    .help("Specify range of the random number, if the item is `rand*`.")
-                    .required(false)
-                    .value_parser(value_parser!(f64))
-                    .num_args(2),
-            );
-
-        // Add subcommands.
-        let root = root
-            .subcommand(&version)
-            .subcommand(&scan)
-            .subcommand(&fix)
-            .subcommand(&docs)
-            .subcommand(&log)
-            .subcommand(&generate);
+        let root = get_root_command_object();
 
         Self { flags, root }
     }
@@ -272,7 +174,7 @@ pub fn parse_generate(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Err
             }
             Some(range[0]..range[1])
         }
-        Ok(None) => None, // fatal!("This argument requires 2 values but 0 was given");
+        Ok(None) => None,
         Err(e) => {
             fatal!("Error when parsing argument '--range': {e}");
         }
@@ -282,10 +184,25 @@ pub fn parse_generate(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Err
         .map(|range| (range.start as i32)..(range.end as i32));
     let len: Option<usize> = match sub_matches.try_get_one::<usize>("len") {
         Ok(Some(val)) => Some(*val),
-        Ok(None) => None, // fatal!("This argument is required but wasn't given"),
+        Ok(None) => None,
         Err(e) => fatal!("Error when parsing argument 'len': {e}"),
     };
-    let item = str2enum(item, len, range_int, range_float);
+    let mut content: Option<String> = match sub_matches.try_get_one::<String>("content") {
+        Ok(Some(s)) => Some(s.to_owned()),
+        Ok(None) => None,
+        Err(e) => fatal!("Error when parsing argument 'content': {e}"),
+    };
+    match sub_matches.try_get_one::<String>("from-file") {
+        Ok(Some(s)) => {
+            // Read the content of the file if the file is specified.
+            let s = read_to_string(s)?;
+            content = Some(s);
+        }
+        Ok(None) => {}
+        Err(e) => fatal!("Error when parsing argument 'from-file': {e}"),
+    }
+
+    let item = str2enum(item, len, range_int, range_float, content);
     println!("{}", generate(item));
     Ok(())
 }
