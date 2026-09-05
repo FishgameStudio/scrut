@@ -11,6 +11,7 @@ use owo_colors::OwoColorize;
 #[derive(Debug, Clone)]
 pub struct Rule {
     pub prompt: &'static str,
+    #[allow(unused)]
     pub kind: it,
     pub regex: Vec<Regex>, // owned
 }
@@ -76,16 +77,6 @@ pub fn print_msg(prompt: &str, filename: &str, pos: &MatchPos, line_text: &str) 
     );
 }
 
-fn kind2str(kind: it) -> &'static str {
-    match kind {
-        it::Evil => "Found evil: ",
-        it::Hardcoded => "Found hard-coded: ",
-        it::Quality => "Found code quality: ",
-        it::Secrets => "Found secrets: ",
-        it::All => "Found issue: ",
-    }
-}
-
 #[must_use = "Do not discard returned value"]
 /// Traverse all given regex, get scanned error, print message and return number of messages.
 pub fn diagnostic_by_regex(rule: &Rule, file_content: &str, filename: &str) -> i32 {
@@ -95,12 +86,7 @@ pub fn diagnostic_by_regex(rule: &Rule, file_content: &str, filename: &str) -> i
         for pos in mat {
             let line_text = file_content.lines().collect::<Vec<_>>()[pos.line - 1];
             // Print error message
-            print_msg(
-                format!("{}{}", kind2str(rule.kind), rule.prompt).as_str(),
-                filename,
-                &pos,
-                line_text,
-            );
+            print_msg(rule.prompt, filename, &pos, line_text);
             err_cnt += 1;
         }
     }
