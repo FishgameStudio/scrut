@@ -112,9 +112,8 @@ pub(crate) fn get_root_command_object() -> Command {
         );
 
     // Add subcommands.
-    
-    root
-        .subcommand(&version)
+
+    root.subcommand(&version)
         .subcommand(&scan)
         .subcommand(&fix)
         .subcommand(&docs)
