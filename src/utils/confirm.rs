@@ -27,7 +27,6 @@ pub fn get_confirm_flag() -> bool {
 /// Set the status of confirming flag.
 #[inline(always)]
 pub fn set_confirm_flag(option: bool) {
-    verbose!("Confirm flag set to {option}");
     CONFIRM_FLAG.store(option, Ordering::Relaxed);
 }
 /// Confirm action. Exit if entered `n`, continue if entered `y`.
