@@ -21,7 +21,7 @@ fn is_match(pattern: &str, rel_path_unix: &str) -> bool {
     }
 }
 
-/// Recursion function to scan all files in specified directory.
+/// Recursive function to scan all files in specified directory.
 pub fn scan_files(
     action: &mut impl FnMut(&String) -> Result<(), Box<dyn error::Error>>,
     directory: &String,
