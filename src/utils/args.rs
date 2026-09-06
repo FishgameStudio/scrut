@@ -2,14 +2,18 @@
 //! Before initialization of log system, **do not** use log macros in [`crate::utils::logging`].
 //! Note: The log system is initialized by [`crate::utils::logging::init_log_file`].
 
-use std::error;
 use std::fs::{exists, read_to_string};
 use std::ops::Range;
 use std::path::Path;
+use std::{env, error};
 
 use clap::{ArgMatches, Command};
 
 use crate::utils::command::get_root_command_object;
+use crate::utils::config::{
+    Config, apply_one_config, get_config_content, init_config, is_config_inited, parse_config,
+    set_config_file,
+};
 use crate::utils::confirm::set_confirm_flag;
 use crate::utils::generate::{generate, str2enum};
 use crate::utils::logging::{enable_verbose, fatal, init_log_file, verbose, warning};
@@ -212,16 +216,36 @@ pub fn parse_generate(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Err
 /// # Panics
 /// If no command provided or unknown command.
 pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
+    let orig_dir = env::current_dir()?;
+    // Parse
     let matches = parser.root.clone().get_matches();
-    if matches.get_flag("verbose") {
-        // Enable verbose logging.
-        enable_verbose();
+
+    /* Set the config file.
+     * Note: This initialization of the configuration system has
+     * logged but the log system doesn't has initialized. The log
+     * of this part will be discarded.
+     */
+    match matches.get_one::<String>("config-file") {
+        Some(path) => {
+            set_config_file(path)?;
+        }
+        None => {
+            fatal!("The path wasn't given for the argument --config-file");
+        }
     }
-    if matches.get_flag("confirm") {
-        set_confirm_flag(true);
-    }
-    // Initialize log system.
-    // You can log below this match statement!
+    let config = if is_config_inited() {
+        parse_config()?
+    } else {
+        Config::new()?
+    };
+
+    /*
+     * Initialize log system.
+     * Be sure that all the functions called above will
+     * not log anything. All of the log before this
+     * initialization will be discarded.
+     * You can log below this match statement!
+     */
     match matches.get_one::<u64>("max-log-size") {
         Some(val) => {
             init_log_file(Some(val * 1024 * 1024))?; // MiB
@@ -230,12 +254,35 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
             init_log_file(None)?;
         }
     }
+    verbose!("Log system initialized");
+
+    if matches.get_flag("verbose") || config.verbose {
+        // Enable verbose logging.
+        enable_verbose();
+    }
+    if matches.get_flag("confirm") || config.confirm {
+        // Enable confirmation mode.
+        set_confirm_flag(true);
+    }
+
+    // Change to the specified directory.
+    match matches.get_one::<String>("curr-dir") {
+        Some(path) => {
+            // No threads spawned at this time,
+            // this change of current directory is safe.
+            env::set_current_dir(path)?;
+        }
+        None => {
+            fatal!("The path wasn't given for the argument --curr-dir (aka -C)");
+        }
+    }
+
     // Match provided subcommand.
     match matches.subcommand() {
         Some(("version", _)) => {
             // Command `version`
             verbose!("print version of scrut ({})", VERSION);
-            println!("scrut version {}", VERSION)
+            println!("scrut version {}", VERSION);
         }
         Some(("docs", _)) => {
             // Command `docs`
@@ -258,9 +305,37 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
             // Command `generate` or its alias `gen`
             parse_generate(sub_matches)?;
         }
+        Some(("config", sub_matches)) => match sub_matches.subcommand() {
+            Some(("print", _)) => {
+                // Print content of `~/.scrut/config.toml`.
+                println!("{}", get_config_content()?);
+            }
+            Some(("show", _)) => {
+                // Show attributes of the config file.
+                println!("{config:#?}");
+            }
+            Some(("set", m)) => match m.get_many::<String>("attr") {
+                Some(args) => {
+                    let args: Vec<String> = args.cloned().collect();
+                    if args.len() != 2 {
+                        fatal!("Expect 2 positional arguments but {} provided", args.len());
+                    }
+                    let key = &args[0];
+                    let val = &args[1];
+                    apply_one_config(key, val)?;
+                }
+                None => fatal!("No such values provided"),
+            },
+            Some(("init", m)) => init_config(m.get_flag("forcibly"))?,
+            Some((cmd, _)) => fatal!("Unknown sub command: '{cmd}'"),
+            None => fatal!("Must provide a sub command of the command `config`"),
+        },
         None => fatal!("Must provide a command"),
         Some((cmd, _)) => fatal!("Unknown command: {}", cmd),
     }
+
+    // Change back to the original directory.
+    env::set_current_dir(orig_dir)?;
 
     Ok(())
 }

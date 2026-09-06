@@ -1,5 +1,6 @@
 pub mod args;
 pub(crate) mod command;
+pub mod config;
 pub mod confirm;
 pub mod gen_utils;
 pub mod generate;

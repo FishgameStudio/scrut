@@ -1,4 +1,8 @@
 //! A simple logging framework for scrut.
+//! You must call [`init_log_file`] to be sure that
+//! the log file is ready. If something logged before
+//! the initialization, the program will not panic but
+//! the log will not be saved to the log file (`~/scrut.log`).
 
 use std::fs::{File, OpenOptions};
 use std::io;
@@ -52,12 +56,16 @@ pub const MAX_LOG_BYTES: u64 = 15 * 1024 * 1024;
 
 /// Initialize log file, call once at program start (main).
 /// Always open log file, independent of verbose flag.
+/// You must call this [`init_log_file`] funnction to be sure that
+/// the log file is ready. If something logged before
+/// the initialization, the program will not panic but
+/// the log will not be saved to the log file (`~/scrut.log`).
 /// # Examples
 /// ```
 /// use scrut::logging::init_log_file;
 /// use std::error::Error;
 /// fn main() {
-///     init_log_file(None);           // Init with default size.
+///     init_log_file(None); // Init with default size.
 ///     init_log_file(Some(5 * 1024 * 1024)); // Init with specified size.
 /// }
 /// ```
@@ -116,6 +124,10 @@ macro_rules! func_name {
 pub(crate) use func_name;
 
 /// Verbose logging
+/// You must call [`init_log_file`] before calling this.
+/// If something called [`verbose`] before the initialization,
+/// the program will not panic but the log will not be
+/// saved to the log file (`~/scrut.log`).
 macro_rules! verbose {
     () => {};
     ($($arg:tt)*) => {
@@ -149,6 +161,10 @@ macro_rules! verbose {
 pub(crate) use verbose;
 
 /// Print warning message and write into the log file.
+/// You must call [`init_log_file`] before calling this.
+/// If something called [`warning`] before the initialization,
+/// the program will not panic but the log will not be
+/// saved to the log file (`~/scrut.log`).
 macro_rules! warning {
     () => {};
     ($($arg:tt)*) => {
@@ -177,6 +193,10 @@ pub(crate) use warning;
 
 /// Print fatal message and write into the log file.
 /// This macro will **automatically terminate this program** if matched arm #1.
+/// You must call [`init_log_file`] before calling this.
+/// If something called [`fatal`] before the initialization,
+/// the program will not panic but the log will not be
+/// saved to the log file (`~/scrut.log`).
 macro_rules! fatal {
     () => {};  // arm #0
     ($($arg:tt)*) => {

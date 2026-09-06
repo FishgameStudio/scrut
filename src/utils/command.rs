@@ -136,6 +136,32 @@ pub(crate) fn get_root_command_object() -> Command {
                 .required(false),
         );
 
+    let config_print = Command::new("print"); // Print the content of `config.toml`.
+    let config_show = Command::new("show"); // Show attributes of the TOML file.
+    let config_set = Command::new("set") // Set an attribute to the config file.
+    .arg(
+        Arg::new("attr") // Positional
+            .required(true)
+            .num_args(2)
+            .value_names(["Key", "Value"])
+            .help("Specify a key and a corresponding value, and apply the attribute to the config file."),
+    );
+    let config_init = Command::new("init") // Initialize the configuration system.
+        .arg(
+            Arg::new("forcibly")
+                .long("forcibly")
+                .short('f')
+                .required(false)
+                .help("Forcibly reinitialize the configuration system.")
+                .action(clap::ArgAction::SetTrue),
+        );
+
+    let config_root = Command::new("config")
+        .subcommand(&config_print)
+        .subcommand(&config_show)
+        .subcommand(&config_set)
+        .subcommand(&config_init);
+
     // Bind subcommands.
 
     root.subcommand(&version)
@@ -144,4 +170,5 @@ pub(crate) fn get_root_command_object() -> Command {
         .subcommand(&docs)
         .subcommand(&log)
         .subcommand(&generate)
+        .subcommand(&config_root)
 }
