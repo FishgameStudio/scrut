@@ -22,5 +22,10 @@ open = "5.4.1"
 owo-colors = "4.4.0"
 rand = "0.10.2"
 regex = "1.13.1"
+serde = { version = "1.0.229", features = ["derive"] }
 sha2 = "0.11.0"
 syn = { version = "3.0.3", features = ["full", "parsing", "extra-traits", "visit"]}
+toml = "1.1.5"
+
+[build-dependencies]
+chrono = "0.4.45"
