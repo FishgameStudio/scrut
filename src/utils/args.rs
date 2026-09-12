@@ -272,13 +272,19 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
     }
 
     // Change to the specified directory.
+    env::set_current_dir(&config.work_dir)?;
     match matches.try_get_one::<String>("curr-dir") {
         Ok(Some(path)) => {
             // No threads spawned at this time,
             // this change of current directory is safe.
+            if !exists(path).is_ok_and(|x| x) {
+                fatal!("Unable to change directory: '{path}' doesn't exist");
+            }
             env::set_current_dir(path)?;
         }
-        Ok(None) => {} // Not required
+        Ok(None) => {
+            env::set_current_dir(&config.work_dir)?;
+        }
         Err(e) => {
             fatal!("Error when parsing the argument --curr-dir (aka -C): {e}");
         }
