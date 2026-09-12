@@ -1,7 +1,5 @@
 /* Build scripts */
 
-use chrono;
-
 fn main() {
     let build_time = chrono::Utc::now()
         .format("%Y-%m-%d %H:%M:%S UTC")
