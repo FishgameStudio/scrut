@@ -30,6 +30,7 @@ Scrut is developed in **Rust**, bringing memory safety, excellent runtime perfor
 ```sh
 # Examples...
 ```
+_See the [documentation](https://FishgameStudio.github.io/scrut)_
 
 ## 🗺️ Roadmap
 
