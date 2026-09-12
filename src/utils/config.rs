@@ -56,7 +56,7 @@ pub fn init_config(forcibly: bool) -> Result<(), Box<dyn Error>> {
     } {
         fs::create_dir(&path)?;
         // ~/.scrut/config.toml
-        fs::write(&path.join("config.toml"), "")?;
+        fs::write(path.join("config.toml"), "")?;
     }
     verbose!("Done");
     verbose!("Initializing config.toml ...");
@@ -68,10 +68,7 @@ pub fn init_config(forcibly: bool) -> Result<(), Box<dyn Error>> {
 #[inline]
 pub fn is_config_inited() -> bool {
     // return true if ~/.scrut exists and ~/.scrut is a directory.
-    (match fs::exists(get_config_dir()) {
-        Err(_) => false,
-        Ok(option) => option,
-    } || get_config_dir().is_dir())
+    fs::exists(get_config_dir()).unwrap_or_default() || get_config_dir().is_dir()
 }
 
 /// Get content of the config file (`~/.scrut/config.toml`).
