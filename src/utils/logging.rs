@@ -138,7 +138,7 @@ macro_rules! verbose {
             let func = this::func_name!();
             let curr_thread = thread::current();
             let thread_name = curr_thread.name().unwrap_or("main");
-            let line = format!("[{} thread '{}' in '{}'] {}\n", thread_name, timestamp, func, args);
+            let line = format!("[{} thread '{}' in '{}'] {}\n", timestamp, thread_name, func, args);
 
             // Print to console ONLY when verbose flag is on
             if this::VERBOSE_LOGGING.load(Ordering::Relaxed) {
@@ -214,7 +214,7 @@ macro_rules! fatal {
             // Write to the log file.
             if let Ok(mut guard) = this::LOG_FILE.lock() {
                 if let Some(ref mut f) = *guard {
-                    let line = format!("[f] [{} thread '{}' terminated in '{}'] {}\n", thread_name, timestamp, func, args);
+                    let line = format!("[f] [{} thread '{}' terminated in '{}'] {}\n", timestamp, thread_name, func, args);
                     let _ = f.write_all(line.as_bytes());
                     let _ = f.flush();
                 }
