@@ -15,14 +15,12 @@ use dirs::home_dir;
 ////// Macro functions for color escaping //////
 
 /// Generates a string wrapped with ANSI red escape sequences.
-#[allow(unused_macros)]
 macro_rules! red {
     ($s:expr) => {
         format!("\x1b[31m{}\x1b[0m", $s)
     };
 }
 /// Generates a string wrapped with ANSI yellow escape sequences.
-#[allow(unused_macros)]
 macro_rules! yellow {
     ($s:expr) => {
         format!("\x1b[33m{}\x1b[0m", $s)
@@ -34,7 +32,6 @@ macro_rules! purple {
         format!("\x1b[35m{}\x1b[0m", $s)
     };
 }
-#[allow(unused_imports)]
 pub(crate) use {purple, red, yellow};
 
 #[inline(always)]
