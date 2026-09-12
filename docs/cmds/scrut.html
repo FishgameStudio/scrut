@@ -20,14 +20,22 @@
     Here's the documentation of command <code>scrut</code>.
     <h2>Synopsis</h2>
     <pre>
-        scrut [-v|--verbose] [-c|--confirm] [--max-log-size &lt;MiB&gt;] [command] [args]
+        scrut [-v|--verbose] [-c|--confirm] [--max-log-size &lt;MiB&gt;] [--config-file &lt;File&gt;] [-C|--curr-dir &lt;Directory&gt;] &lt;command&gt; [args]
     </pre>
     <h2>Options</h2>
-    <li><code>&minus;v,--verbose</code>&colon; Enable verbose logging</li>
-    <li><code>&minus;c,--confirm</code>&colon; Confirm before actions</li>
+    <li><code>&minus;v,--verbose</code>&colon; Enable verbose logging. It will print many things if you enabled it.</li>
+    <li><code>&minus;c,--confirm</code>&colon; Confirm before actions. ("Actions" include writing files, renaming
+        directories, etc.)</li>
     <li><code>&minus;&minus;max-log-size</code></li>&colon; Set the maximum size of the log file
     (<code>~/scrut.log</code>). The unit
     of the size is <b>MiB</b>
+    <li><code>--config-file</code>&colon; Specify a new path of the configuration file. The default config file is
+        <code>~/.scrut/config.toml</code> (if the configuration is initialized).<b>Panics if the format is invalid.</b>
+        See <a href="./config.html">command <code>config</code></a> for more information.
+    </li>
+    <li><code>&minus;C,--curr-dir</code>&colon; Run as if scrut was started in the specified path instead of the current
+        working directory. If the path is present but empty, e.g. -C "", then the current working directory is
+        left unchanged.</li>
     <h2>Commands</h2>
     <li><a href="./version.html">version</a>&colon; Show current version of <code>scrut</code></li>
     <li><a href="./docs.html">docs</a>&colon; Open web page of Scrut Docs with default browser</li>

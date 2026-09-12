@@ -17,7 +17,7 @@
     <code>scrut generate</code> &middot; Generate specified items.
     <h2>Synopsis</h2>
     <pre>
-        scrut [generate|gen] &lt;ITEM&gt; [-l|--len &lt;length&gt;] [-r|--range &lt;start&gt; &lt;end&gt;] [-c|--content &lt;string&gt;] [--from-file &lt;filename&gt;]
+        scrut [generate|gen] &lt;ITEM&gt; [-l|--len &lt;Length&gt;] [-r|--range &lt;Start&gt; &lt;End&gt;] [-c|--content &lt;string&gt;] [--from-file|--file &lt;filename&gt;]
     </pre>
     <h2>Description</h2>
     Generate one specified item and print it.
@@ -38,7 +38,8 @@
         </li>
         <li><code>&minus;c,--content</code>&colon; The content to generate SHA256 hash. It's necessary if the item needs
             complete content.</li>
-        <li><code>--from-file</code>&colon; The name of the file. The program will read content of the specified file
+        <li><code>--from-file,--file</code>&colon; The name of the file. The program will read content of the specified
+            file
             and pass the content to the <code>--content</code> param. The option <code>--from-file</code> has higher
             priority than the option <code>--content</code>. It's necessary if the option <code>--content</code> is
             necessary.</li>

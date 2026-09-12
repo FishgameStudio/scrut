@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Scrut Docs - Command config</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../default.css">
+</head>
+
+<body>
+    <nav>
+        <a href="../index.html">Home Page</a>
+        <a href="javascript:history.back()">Back</a>
+    </nav>
+    <h2>Name</h2>
+    <code>scrut config</code> &middot; Manage configuration of scrut.
+    <h2>Synopsis</h2>
+    <pre>
+        scrut config &lt;subcommand&gt; [args]
+        scrut config print
+        scrut config show
+        scrut config set &lt;Key&gt; &lt;Value&gt;
+        scrut config init [-f|--forcibly]
+    </pre>
+    <h2>Description</h2>
+    Manage configuration files of scrut. The configuration is centrally stored at the directory <code>~/.scrut</code>.
+
+    <h2>Sub commands</h2>
+    <ul>
+        <li>
+            <h4>Print</h4>
+            Print the raw content of the main config file (<code>~/.scrut/config.toml</code>).
+            <pre>
+                scrut config print
+            </pre>
+            No extra options.
+        </li>
+        <li>
+            <h4>Show</h4>
+            Show the prettily formatted structure of the config file.
+            <pre>
+                scrut config show
+            </pre>
+            No extra options.
+        </li>
+        <li>
+            <h4>Set</h4>
+            Modify the config file with the given key and value.
+            <pre>
+                scrut config set &lt;Key&gt; &lt;Value&gt;
+            </pre>
+            <ul>
+                <li><code>Key</code>&colon; The name of the config you want to change.</li>
+                <li><code>Value</code>&colon; The value you want to assign to the key.</li>
+            </ul>
+            Panics if the key is unknown.
+        </li>
+        <li>
+            <h4>Init</h4>
+            Initialize the configuration system.
+            <pre>
+                scrut config init [-f|--forcibly]
+            </pre>
+        <li><code>&minus;f,--forcibly</code><b>Forcibly reinitialize</b> the config.</li>
+        </li>
+    </ul>
+    <h2>Options</h2>
+    This command doesn't own a command-line options.
+    <h2>Panics</h2>
+    Panics if the sub command isn't provided.
+</body>
+
+</html>
