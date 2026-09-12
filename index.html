@@ -2,16 +2,105 @@
 <html>
 
 <head>
-    <!-- Redirect to docs/index.html (Temporary) -->
-    <meta http-equiv="refresh" content="0; url=docs/index.html">
-    <title>Redirect to Docs</title>
+    <title>Scrut - Your simple code scrutinizer</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./website/main.css">
 </head>
 
 <body>
-    <p>Redirecting to documentation...
+    <nav>
+        <a href="./index.html">Home Page</a>
+        <a href="./docs/index.html">Docs</a>
+        <a href="https://github.com/FishgameStudio/scrut">GitHub</a>
+        <a href="javascript:history.back()">Back</a>
+    </nav>
+    <div class="fade">
+        <h1>Scrut</h1>
+        <p style="font-size: 1.5em">
+            A <b>lightweight, simple &amp; helpful</b> CLI tool for code scrutiny, developed in <b>Rust</b>.
+        </p>
+    </div>
+    <hr>
+    <div class="fade">
+        <h2>Why scrut?</h2>
+        <div class="fade row">
+            <div class="col">
+                <h3>Performance</h3>
+                Scrut is developed in <b>Rust</b>, bringing memory safety, excellent runtime performance and lightweight
+                binaries.
+            </div>
+            <div class="col">
+                <h3>Usability</h3>
+                Scrut features <b>human-written</b> documentation and an approachable introductory guide. Commands are
+                <b>simple
+                    to use</b>, and scan results are presented in easy-to-understand formats.
+            </div>
+            <div class="col">
+                <h3>Productivity</h3>
+                Scrut turns routine security and quality checks into one fast command. Scan specified files, generate
+                checksums and secrets, and get actionable diagnostics directly in your terminal.
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div class="fade">
+        <h2>Quick start</h2>
+        <p>Show the version of the program:</p>
+        <pre><code>scrut version</code></pre>
+        <p>Scan the current project with one command:</p>
+        <pre><code>scrut scan all</code></pre>
+        <p>Or focus on a specific type of issue:</p>
+        <pre><code>scrut scan secrets quality</code></pre>
+    </div>
+    <hr>
+    <div class="fade">
+        <h2>What Scrut checks</h2>
+        <ul>
+            <li><b>Secrets</b>, including passwords, personal access tokens and JSON web tokens.</li>
+            <li><b>Unsafe patterns</b>, including destructive commands and unsafe pointer operations.</li>
+            <li><b>Hard-coded values</b>, including paths, URLs, email addresses and time zones.</li>
+            <li><b>Quality issues</b>, including debug macros, TODO markers and unreachable code.</li>
+        </ul>
+    </div>
+    <hr>
+    <div class="fade">
+        <h2>Useful workflow</h2>
+        <pre><code># Check a project
+scrut scan all
+
+# Generate a strong password
+scrut generate password --len 24
+
+# Create SHA256 checksums for release files
+scrut generate checksum
+
+# Inspect diagnostic logs
+scrut log</code></pre>
+    </div>
+    <hr>
+    <div class="fade">
+        <h2>Actionable diagnostics</h2>
+        <p>
+            Scrut reports the rule, file, line number and matching source code,
+            so issues can be understood directly in the terminal.
+        </p>
+        <pre><code>Password: file src/config.rs, line 12:
+12 | let password = "development-password";
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</code></pre>
+    </div>
+    <hr>
+    <div class="fade">
+        <h2>Documentation</h2>
+        Need help? See the <a href="./docs/index.html">documentation site</a> to learn more about scrut.
+    </div>
+    <hr>
+    <p style="font-size: 0.8em; text-align: center;">
+        Copyright (c) 2026 FishgameStudio. Maintained by FishgameStudio.
         <br>
-        Click <a href="docs/index.html">here</a> if no redirect
+        Website deployed on GitHub Pages.
     </p>
+
+    <script src="./website/scroll-fade.js"></script>
 </body>
 
 </html>

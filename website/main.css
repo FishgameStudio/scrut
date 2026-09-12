@@ -1,17 +1,17 @@
-/* Default styles for documentation files. */
+/* Stylesheet for index.html. (Dark) */
 :root {
-    --bg: #f4ede0;
-    --bg-card: #fffaf0;
-    --text: #2b241c;
-    --nav-bg: #8b4513;
-    --nav-text: #fff5e1;
-    --accent: #912828;
-    --accent-light: #c05050;
-    --border: #d4c4a8;
-    --code-bg: #2e2418;
+    --bg: #1c1a17;
+    --bg-card: #292520;
+    --text: #e9e2d5;
+    --nav-bg: #5c3418;
+    --nav-text: #fff0d8;
+    --accent: #d15454;
+    --accent-light: #e87878;
+    --border: #4a4338;
+    --code-bg: #141210;
     --code-text: #f0e6d2;
-    --inline-code-bg: rgba(145, 40, 40, 0.08);
-    --faq-border: #a47b34;
+    --inline-code-bg: rgba(209, 84, 84, 0.15);
+    --faq-border: #b48b44;
 }
 
 * {
@@ -34,7 +34,7 @@ nav {
     background: var(--nav-bg);
     padding: 12px 15px;
     border-radius: 6px;
-    box-shadow: 0 3px 10px rgba(46, 36, 24, 0.2);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
     margin-bottom: 2rem;
 }
 
@@ -49,7 +49,7 @@ nav a {
 }
 
 nav a:hover {
-    color: #ffd98a;
+    color: #ffc970;
 }
 
 code {
@@ -73,7 +73,7 @@ pre {
     border-radius: 6px;
     padding: 14px 16px;
     overflow-x: auto;
-    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
 pre code {
@@ -92,7 +92,6 @@ h6 {
     /* Titles */
     margin: 1.2em 0 0.6em 0;
     font-family: Georgia, 'Times New Roman', Times, serif;
-    text-transform: uppercase;
     color: var(--accent);
     letter-spacing: 0.015em;
 }
@@ -144,7 +143,7 @@ a:hover {
 
 summary::after {
     content: "?";
-    color: #d62828;
+    color: #ff5c5c;
     margin-left: 6px;
 }
 
@@ -155,5 +154,44 @@ summary::after {
     border-left: 4px solid var(--faq-border);
     border-radius: 4px;
     padding: 10px 14px;
-    box-shadow: 0 2px 8px rgba(46, 36, 24, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade {
+    opacity: 0;
+}
+
+.fade.visible {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.row {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.row>.col {
+    flex: 1;
+}
+
+.row>.col-fixed {
+    width: 300px;
+}
+
+@media (max-width:720px) {
+    .row {
+        flex-direction: column;
+    }
 }
