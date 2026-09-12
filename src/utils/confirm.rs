@@ -6,6 +6,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::utils::logging::{verbose, warning};
 
+use owo_colors::OwoColorize;
+
 /// Enumeration of default option in confirming input.
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -32,11 +34,15 @@ pub fn set_confirm_flag(option: bool) {
 /// Confirm action. Exit if entered `n`, continue if entered `y`.
 #[inline]
 pub fn confirm(prompt: &str, default_option: ConfirmDefaultOption) {
+    if !get_confirm_flag() {
+        return;
+    }
     verbose!(
         "Confirming choice, with prompt '{prompt}', with default_option '{default_option:?}' ..."
     );
     println!(
-        "{prompt} {}: ",
+        "{} {prompt} {}: ",
+        "Confirm: ".yellow().bold(),
         match default_option {
             ConfirmDefaultOption::Yes => "(Y/n)",
             ConfirmDefaultOption::No => "(y/N)",

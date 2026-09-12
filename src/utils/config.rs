@@ -13,12 +13,14 @@ use std::sync::{LazyLock, Mutex};
 
 use serde::{Deserialize, Serialize};
 
+use crate::utils::confirm::{DefaultOpt, confirm};
 use crate::utils::logging::{fatal, verbose, warning};
 
 /// Returns `~/.scrut`.
 fn get_config_dir() -> PathBuf {
     verbose!("Getting configuration dir");
     let home = home_dir().unwrap_or_else(|| fatal!("Couldn't get home directory"));
+    verbose!("Done");
     home.join(".scrut")
 }
 
@@ -29,26 +31,32 @@ static CONFIG_PATH: LazyLock<Mutex<PathBuf>> =
 /// # Panics
 /// If unable to access the configuration directory.
 pub fn init_config(forcibly: bool) -> Result<(), Box<dyn Error>> {
-    if forcibly {
-        fs::remove_dir_all(get_config_dir())?;
+    let path = get_config_dir();
+    if forcibly && path.exists() {
+        confirm(
+            "Reinitialize configuration forcibly? All the config will be reset.",
+            DefaultOpt::Yes,
+        );
+        fs::remove_dir_all(&path)?;
     }
     if is_config_inited() {
         return Ok(());
     }
     verbose!("Initializing configuration system...");
-    if !get_config_dir().is_dir() {
+    if path.exists() && !path.is_dir() {
         // ~/.scrut exists but is not a directory, rename
         warning!("~/.scrut already exists but isn't a directory, renaming to '.scrut(2)' ...");
-        fs::rename(get_config_dir(), ".scrut(2)")?;
+        confirm("Rename old `~/.scrut` to `.scrut(2)`?", DefaultOpt::Yes);
+        fs::rename(&path, ".scrut(2)")?;
     }
     // If `~/scrut` doesn't exist
-    if !match fs::exists(get_config_dir()) {
+    if !match fs::exists(&path) {
         Err(e) => fatal!("Unable to access configuration directory: {e}"),
         Ok(option) => option,
     } {
-        fs::create_dir(get_config_dir())?;
+        fs::create_dir(&path)?;
         // ~/.scrut/config.toml
-        fs::write(get_config_dir().join("config.toml"), "")?;
+        fs::write(&path.join("config.toml"), "")?;
     }
     verbose!("Done");
     verbose!("Initializing config.toml ...");
@@ -60,10 +68,10 @@ pub fn init_config(forcibly: bool) -> Result<(), Box<dyn Error>> {
 #[inline]
 pub fn is_config_inited() -> bool {
     // return true if ~/.scrut exists and ~/.scrut is a directory.
-    return (match fs::exists(get_config_dir()) {
+    (match fs::exists(get_config_dir()) {
         Err(_) => false,
         Ok(option) => option,
-    } || get_config_dir().is_dir());
+    } || get_config_dir().is_dir())
 }
 
 /// Get content of the config file (`~/.scrut/config.toml`).
@@ -72,7 +80,10 @@ pub fn is_config_inited() -> bool {
 #[inline]
 #[allow(unused)]
 pub fn get_config_content() -> Result<String, Box<dyn Error>> {
-    let content = fs::read_to_string(&*CONFIG_PATH.lock()?)?;
+    let path = &*CONFIG_PATH.lock()?;
+    verbose!("Reading from config path {:?} ...", path);
+    let content = fs::read_to_string(path)?;
+    verbose!("Done");
     Ok(content)
 }
 
@@ -141,6 +152,10 @@ pub fn parse_config() -> Result<Config, Box<dyn Error>> {
 /// Save TOML to the configuration file with given [`Config`] object.
 /// # Errors
 pub fn save_config(config: &Config) -> Result<(), Box<dyn Error>> {
+    confirm(
+        &format!("Save config {config:?} to the config file?"),
+        DefaultOpt::Yes,
+    );
     verbose!("Parsing Config struct '{config:?}' ...");
     let s: String = toml::to_string_pretty(config)?;
     verbose!("Done. Writing Config struct '{config:?}' to config.toml ...");
@@ -155,6 +170,10 @@ pub fn save_config(config: &Config) -> Result<(), Box<dyn Error>> {
 /// # Errors
 /// If failed to get / set the config, or the type of the value mismatch.
 pub fn apply_one_config(key: &str, val: &str) -> Result<(), Box<dyn Error>> {
+    confirm(
+        &format!("Apply attribute '{key}' to value '{val}'?"),
+        DefaultOpt::Yes,
+    );
     verbose!("Applying config key '{key}' as value '{val}' ...");
     let mut config = parse_config()?;
     match key {
