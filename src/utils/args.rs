@@ -225,12 +225,13 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
      * logged but the log system doesn't has initialized. The log
      * of this part will be discarded.
      */
-    match matches.get_one::<String>("config-file") {
-        Some(path) => {
+    match matches.try_get_one::<String>("config-file") {
+        Ok(Some(path)) => {
             set_config_file(path)?;
         }
-        None => {
-            fatal!("The path wasn't given for the argument --config-file");
+        Ok(None) => {} // Not required
+        Err(e) => {
+            fatal!("Error when parsing argument --config-file: {e}");
         }
     }
     let config = if is_config_inited() {
@@ -246,12 +247,16 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
      * initialization will be discarded.
      * You can log below this match statement!
      */
-    match matches.get_one::<u64>("max-log-size") {
-        Some(val) => {
+    match matches.try_get_one::<u64>("max-log-size") {
+        Ok(Some(val)) => {
             init_log_file(Some(val * 1024 * 1024))?; // MiB
         }
-        None => {
+        Ok(None) => {
             init_log_file(None)?;
+        }
+        Err(e) => {
+            // This log statement will not saved the log to the log file.
+            fatal!("Error when parsing argument --max-log-size: {e}");
         }
     }
     verbose!("Log system initialized");
@@ -266,14 +271,15 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
     }
 
     // Change to the specified directory.
-    match matches.get_one::<String>("curr-dir") {
-        Some(path) => {
+    match matches.try_get_one::<String>("curr-dir") {
+        Ok(Some(path)) => {
             // No threads spawned at this time,
             // this change of current directory is safe.
             env::set_current_dir(path)?;
         }
-        None => {
-            fatal!("The path wasn't given for the argument --curr-dir (aka -C)");
+        Ok(None) => {} // Not required
+        Err(e) => {
+            fatal!("Error when parsing the argument --curr-dir (aka -C): {e}");
         }
     }
 
