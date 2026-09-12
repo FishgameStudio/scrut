@@ -252,7 +252,8 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
             init_log_file(Some(val * 1024 * 1024))?; // MiB
         }
         Ok(None) => {
-            init_log_file(None)?;
+            // `config.max_log_bytes` is already bytes (mb * 1024 * 1024).
+            init_log_file(Some(config.max_log_bytes))?;
         }
         Err(e) => {
             // This log statement will not saved the log to the log file.

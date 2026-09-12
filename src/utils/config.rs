@@ -86,7 +86,7 @@ pub fn set_config_file<P>(file: P) -> Result<(), Box<dyn Error>>
 where
     P: Into<PathBuf>,
 {
-    let file = file.into();
+    let file: PathBuf = file.into();
     if !&file.exists() {
         fatal!("Config file '{}' doesn't exist", file.display());
     }
@@ -99,10 +99,10 @@ where
 /// Main configuration struct.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
-    pub work_dir: PathBuf, // -C --curr-dir <Directory>
-    pub verbose: bool,     // -v --verbose
-    pub confirm: bool,     // -c --confirm
-    pub max_log_mb: u64,   // --max-log-size <MiB>
+    pub work_dir: PathBuf,  // -C --curr-dir <Directory>
+    pub verbose: bool,      // -v --verbose
+    pub confirm: bool,      // -c --confirm
+    pub max_log_bytes: u64, // --max-log-size <MiB>
 }
 impl Config {
     /// Create a new [`Config`] object with default values.
@@ -113,17 +113,17 @@ impl Config {
             work_dir: current_dir()?,
             verbose: false,
             confirm: false,
-            max_log_mb: 15 * 1024 * 1024,
+            max_log_bytes: 15 * 1024 * 1024,
         })
     }
     /// Create a new [`Config`] object with given arguments.
     #[allow(unused)]
-    pub fn new_with(work_dir: PathBuf, verbose: bool, confirm: bool, max_log_mb: u64) -> Self {
+    pub fn new_with(work_dir: PathBuf, verbose: bool, confirm: bool, max_log_bytes: u64) -> Self {
         Self {
             work_dir,
             verbose,
             confirm,
-            max_log_mb,
+            max_log_bytes,
         }
     }
 }
@@ -167,10 +167,11 @@ pub fn apply_one_config(key: &str, val: &str) -> Result<(), Box<dyn Error>> {
         "confirm" => {
             config.confirm = val.parse::<bool>()?;
         }
-        "max_log_mb" => {
-            config.max_log_mb = val.parse::<u64>()?;
+        "max_log_bytes" => {
+            config.max_log_bytes = val.parse::<u64>()?;
         }
         other => fatal!("Unknown config key name: '{other}'"),
     }
+    save_config(&config)?;
     Ok(())
 }
