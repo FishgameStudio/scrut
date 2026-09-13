@@ -27,7 +27,6 @@ body {
     margin-top: 0px;
     background: var(--bg);
     line-height: 1.7;
-    max-width: 90ch;
 }
 
 nav {
