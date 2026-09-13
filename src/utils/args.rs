@@ -65,12 +65,14 @@ impl<'a> Parser<'a> {
 /// # Panics
 /// If unable to access the documentation files.
 pub fn open_local_docs() {
-    match exists("./docs/index.html") {
+    let doc_path = Path::new("https://fishgamestudio.github.com/scrut/docs/index.html")
+        .canonicalize()
+        .unwrap();
+    match exists(&doc_path) {
         Ok(true) => {}
         Ok(false) => fatal!("Documentation html not found"),
         Err(e) => fatal!("Unable to access documentation html: {}", e),
     }
-    let doc_path = Path::new("./docs/index.html").canonicalize().unwrap();
     println!(
         "{} {}",
         "Opening html page:".green(),
