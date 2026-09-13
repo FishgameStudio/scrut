@@ -4,7 +4,7 @@ use std::{env, error, fs};
 
 use globset::Glob;
 
-use crate::utils::logging::{fatal, verbose, warning};
+use crate::utils::logging::{fail, fatal, verbose, warning};
 
 use crate::utils::scan_utils::{
     evil::scan_evil, hardcoded::scan_hardcoded, quality::scan_quality, secrets::scan_secrets,
@@ -228,12 +228,12 @@ pub fn scan_cwd(
         eprintln!("\n{}", "Oh no! 💥".red().bold());
         eprintln!("{issues} issues found.");
         verbose!("{issues} issues found");
+        fail!("Found {issues} issue(s)");
     } else {
         println!("{}", "No issues found!".green().bold());
         verbose!("No issues found");
+        Ok(())
     }
-
-    Ok(())
 }
 
 /// Unit tests

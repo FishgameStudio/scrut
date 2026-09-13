@@ -12,6 +12,18 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use chrono::Local;
 use dirs::home_dir;
 
+////// Scrut's own error type //////
+
+///
+#[derive(Debug)]
+pub struct Error(pub String);
+impl std::error::Error for Error {}
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 ////// Macro functions for color escaping //////
 
 /// Generates a string wrapped with ANSI red escape sequences.
@@ -249,3 +261,45 @@ macro_rules! fatal {
     };
 }
 pub(crate) use fatal;
+
+/// Generate a [`Err`] enumeration in with given error message
+/// # Examples
+/// ```
+/// use crate::utils::logging::fail;
+/// fn a() -> Result<(), Box<dyn Error>> {
+///     fail!("Failed")
+/// }
+/// ```
+macro_rules! fail {
+    () => {};
+    ($($arg:tt)*) => {{
+        use crate::utils::logging::Error;
+        let args = format_args!($($arg)*);
+        let msg = format!("{}\n", args);
+        return Err(Box::new(Error(msg)));
+    }};
+}
+pub(crate) use fail;
+
+/// Automatic return a value in a function and log.
+/// # Examples
+/// ```
+/// use crate::utils::logging::{ret, init_log_file};
+/// fn add(a: i32, b: i32) -> i32 {
+///     init_log_file(None);
+///     ret!(a + b); // Logged
+/// }
+/// ```
+#[allow(unused_macros)]
+macro_rules! ret {
+    () => {
+        return;
+    };
+    ($ret_value:expr) => {{
+        use crate::utils::logging::verbose;
+        verbose!("Function returned value {:#?}", $ret_value);
+        return $ret_value;
+    }};
+}
+#[allow(unused_imports)]
+pub(crate) use ret;
