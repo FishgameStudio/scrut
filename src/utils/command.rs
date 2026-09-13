@@ -46,13 +46,14 @@ pub(crate) fn get_root_command_object() -> Command {
                 .required(false),
         );
 
-    let version = Command::new("version");
+    let version = Command::new("version").about("Show current version of scrut");
 
-    let docs = Command::new("docs");
+    let docs = Command::new("docs").about("Open web page of Scrut Docs with default browser");
 
-    let log = Command::new("log");
+    let log = Command::new("log").about("Print contents of the log file");
 
     let scan = Command::new("scan")
+        .about("Scan issues in specified files")
         .arg(
             Arg::new("item") // Positional argument
                 .help("Specify items to scan")
@@ -78,6 +79,7 @@ pub(crate) fn get_root_command_object() -> Command {
         );
 
     let fix = Command::new("fix")
+        .about("Fix known issues in specified files")
         .arg(
             Arg::new("item") // Positional argument
                 .value_name("Item")
@@ -92,6 +94,7 @@ pub(crate) fn get_root_command_object() -> Command {
         );
 
     let generate = Command::new("generate")
+        .about("Generate specified items")
         .alias("gen")
         .arg(
             // Potisional argument to specify item.
@@ -136,9 +139,12 @@ pub(crate) fn get_root_command_object() -> Command {
                 .required(false),
         );
 
-    let config_print = Command::new("print"); // Print the content of `config.toml`.
-    let config_show = Command::new("show"); // Show attributes of the TOML file.
-    let config_set = Command::new("set") // Set an attribute to the config file.
+    let config_print = Command::new("print")
+        .about("Print the raw content of the main config file (~/.scrut/config.toml).");
+    let config_show =
+        Command::new("show").about("Show the prettily formatted structure of the config file.");
+    let config_set = Command::new("set") 
+    .about("Modify the config file with the given key and value.")
     .arg(
         Arg::new("attr") // Positional
             .required(true)
@@ -146,7 +152,8 @@ pub(crate) fn get_root_command_object() -> Command {
             .value_names(["Key", "Value"])
             .help("Specify a key and a corresponding value, and apply the attribute to the config file."),
     );
-    let config_init = Command::new("init") // Initialize the configuration system.
+    let config_init = Command::new("init")
+        .about("Initialize the configuration system.")
         .arg(
             Arg::new("forcibly")
                 .long("forcibly")
@@ -157,6 +164,7 @@ pub(crate) fn get_root_command_object() -> Command {
         );
 
     let config_root = Command::new("config")
+        .about("Manage configuration of scrut")
         .subcommand(&config_print)
         .subcommand(&config_show)
         .subcommand(&config_set)
