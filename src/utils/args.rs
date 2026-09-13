@@ -41,7 +41,7 @@ pub fn open_local_docs() {
     println!(
         "{} {}",
         "Opening html page:".green(),
-        doc_path.to_string_lossy().to_string()
+        doc_path.to_string_lossy()
     );
     verbose!("Opening html page: {}", doc_path.to_str().unwrap());
     if let Err(e) = that(doc_path.as_os_str()) {
