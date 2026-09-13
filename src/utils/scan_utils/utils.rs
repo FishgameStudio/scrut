@@ -1,5 +1,6 @@
 //! Utilities for this scan module.
 
+use crate::utils::logging::ret;
 use crate::utils::logging::verbose;
 use crate::utils::scan::ItemType as it;
 
@@ -38,11 +39,7 @@ pub struct MatchPos {
 impl MatchPos {
     /// Create a new `MatchPos` object.
     pub fn new(line: usize, start: usize, end: usize) -> Self {
-        verbose!(
-            "Created new `MatchPos` object with params: {:?}",
-            (line, start, end)
-        );
-        Self { line, start, end }
+        ret!(Self { line, start, end })
     }
 }
 
@@ -60,7 +57,7 @@ pub fn scan_matched(s: &str, pattern: &Regex) -> Vec<MatchPos> {
             res.push(MatchPos::new(line_no, mat.start(), mat.end()));
         }
     }
-    res
+    ret!(res)
 }
 
 /// Print the error message.
@@ -90,5 +87,5 @@ pub fn diagnostic_by_regex(rule: &Rule, file_content: &str, filename: &str) -> i
             err_cnt += 1;
         }
     }
-    err_cnt
+    ret!(err_cnt)
 }

@@ -106,7 +106,7 @@ pub fn init_log_file(max_log_bytes: Option<u64>) -> io::Result<()> {
             .open(log_path)?;
         *guard = Some(file);
     }
-    Ok(())
+    ok!()
 }
 
 /// Enable console verbose output, file logging is already active.
@@ -262,7 +262,7 @@ macro_rules! fatal {
 }
 pub(crate) use fatal;
 
-/// Generate a [`Err`] enumeration in with given error message
+/// Generate a [`Err`] enumeration with given error message
 /// # Examples
 /// ```
 /// use crate::utils::logging::fail;
@@ -281,16 +281,33 @@ macro_rules! fail {
 }
 pub(crate) use fail;
 
+/// Generate a [`Ok`] enumeration with given return value
+/// # Examples
+/// ```
+/// use crate::utils::logging::ok;
+/// fn a() -> Result<(), Box<dyn Error>> {
+///     ok!("Succeeded")
+/// }
+/// ```
+macro_rules! ok {
+    () => {
+        return Ok(())
+    };
+    ($val:expr) => {{
+        return Ok($val);
+    }};
+}
+pub(crate) use ok;
+
 /// Automatic return a value in a function and log.
 /// # Examples
 /// ```
 /// use crate::utils::logging::{ret, init_log_file};
 /// fn add(a: i32, b: i32) -> i32 {
 ///     init_log_file(None);
-///     ret!(a + b); // Logged
+///     ret!(a + b) // Logged
 /// }
 /// ```
-#[allow(unused_macros)]
 macro_rules! ret {
     () => {
         return;
@@ -301,5 +318,4 @@ macro_rules! ret {
         return $ret_value;
     }};
 }
-#[allow(unused_imports)]
 pub(crate) use ret;

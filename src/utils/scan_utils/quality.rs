@@ -3,6 +3,7 @@
 use regex::Regex;
 
 use super::utils::{Rule, diagnostic_by_regex};
+use crate::utils::logging::ret;
 use crate::utils::scan::ItemType::Quality;
 
 use once_cell::sync::Lazy;
@@ -86,5 +87,5 @@ pub fn scan_quality(s: &String, filename: &String) -> i32 {
     for rule in &*RULES {
         total_error += diagnostic_by_regex(rule, s, filename);
     }
-    total_error
+    ret!(total_error)
 }

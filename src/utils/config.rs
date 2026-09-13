@@ -14,14 +14,14 @@ use std::sync::{LazyLock, Mutex};
 use serde::{Deserialize, Serialize};
 
 use crate::utils::confirm::{DefaultOpt, confirm};
-use crate::utils::logging::{fatal, verbose, warning};
+use crate::utils::logging::{fatal, ok, ret, verbose, warning};
 
 /// Returns `~/.scrut`.
 fn get_config_dir() -> PathBuf {
     verbose!("Getting configuration dir");
     let home = home_dir().unwrap_or_else(|| fatal!("Couldn't get home directory"));
     verbose!("Done");
-    home.join(".scrut")
+    ret!(home.join(".scrut"))
 }
 
 static CONFIG_PATH: LazyLock<Mutex<PathBuf>> =
@@ -40,7 +40,7 @@ pub fn init_config(forcibly: bool) -> Result<(), Box<dyn Error>> {
         fs::remove_dir_all(&path)?;
     }
     if is_config_inited() {
-        return Ok(());
+        ok!();
     }
     verbose!("Initializing configuration system...");
     if path.exists() && !path.is_dir() {
@@ -61,14 +61,14 @@ pub fn init_config(forcibly: bool) -> Result<(), Box<dyn Error>> {
     verbose!("Done");
     verbose!("Initializing config.toml ...");
     save_config(&Config::new()?)?;
-    Ok(())
+    ok!()
 }
 
 /// Test whether the configuration system is initialized.
 #[inline]
 pub fn is_config_inited() -> bool {
     // return true if ~/.scrut exists and ~/.scrut is a directory.
-    fs::exists(get_config_dir()).unwrap_or_default() || get_config_dir().is_dir()
+    ret!(fs::exists(get_config_dir()).unwrap_or_default() || get_config_dir().is_dir())
 }
 
 /// Get content of the config file (`~/.scrut/config.toml`).
@@ -81,7 +81,7 @@ pub fn get_config_content() -> Result<String, Box<dyn Error>> {
     verbose!("Reading from config path {:?} ...", path);
     let content = fs::read_to_string(path)?;
     verbose!("Done");
-    Ok(content)
+    ok!(content)
 }
 
 /// Apply configuration from a different path.
@@ -101,7 +101,7 @@ where
     let mut guard = CONFIG_PATH.lock()?;
     verbose!("Config file set to {file:#?}");
     *guard = file; // `file` moved here
-    Ok(())
+    ok!()
 }
 
 /// Main configuration struct.
@@ -117,7 +117,7 @@ impl Config {
     /// # Errors
     /// If unable to get the current working directory.
     pub fn new() -> Result<Self, Box<dyn Error>> {
-        Ok(Self {
+        ok!(Self {
             work_dir: current_dir()?,
             verbose: false,
             confirm: false,
@@ -127,12 +127,12 @@ impl Config {
     /// Create a new [`Config`] object with given arguments.
     #[allow(unused)]
     pub fn new_with(work_dir: PathBuf, verbose: bool, confirm: bool, max_log_bytes: u64) -> Self {
-        Self {
-            work_dir,
+        ret!(Self {
+            work_dir: work_dir.clone(),
             verbose,
             confirm,
             max_log_bytes,
-        }
+        })
     }
 }
 
@@ -143,7 +143,7 @@ pub fn parse_config() -> Result<Config, Box<dyn Error>> {
     verbose!("Parsing config.toml...");
     let config: Config = toml::from_str(&get_config_content()?)?;
     verbose!("Done");
-    Ok(config)
+    ok!(config)
 }
 
 /// Save TOML to the configuration file with given [`Config`] object.
@@ -158,7 +158,7 @@ pub fn save_config(config: &Config) -> Result<(), Box<dyn Error>> {
     verbose!("Done. Writing Config struct '{config:?}' to config.toml ...");
     fs::write(&*CONFIG_PATH.lock()?, s)?;
     verbose!("Done");
-    Ok(())
+    ok!()
 }
 
 /// Apply one config with given key & val.
@@ -189,5 +189,5 @@ pub fn apply_one_config(key: &str, val: &str) -> Result<(), Box<dyn Error>> {
         other => fatal!("Unknown config key name: '{other}'"),
     }
     save_config(&config)?;
-    Ok(())
+    ok!()
 }

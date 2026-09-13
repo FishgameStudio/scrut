@@ -4,7 +4,7 @@ use std::io;
 use std::process::exit;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use crate::utils::logging::{verbose, warning};
+use crate::utils::logging::{ret, verbose, warning};
 
 use owo_colors::OwoColorize;
 
@@ -24,12 +24,12 @@ pub(crate) static CONFIRM_FLAG: AtomicBool = AtomicBool::new(false);
 /// Get whether the --confirm argument was given.
 #[inline(always)]
 pub fn get_confirm_flag() -> bool {
-    CONFIRM_FLAG.load(Ordering::Relaxed)
+    ret!(CONFIRM_FLAG.load(Ordering::Relaxed))
 }
 /// Set the status of confirming flag.
 #[inline(always)]
 pub fn set_confirm_flag(option: bool) {
-    CONFIRM_FLAG.store(option, Ordering::Relaxed);
+    ret!(CONFIRM_FLAG.store(option, Ordering::Relaxed));
 }
 /// Confirm action. Exit if entered `n`, continue if entered `y`.
 #[inline]
@@ -93,12 +93,12 @@ pub fn confirm_noexit(prompt: &str, default_option: ConfirmDefaultOption) -> boo
         match buf.to_lowercase().trim() {
             "" => match default_option {
                 ConfirmDefaultOption::None => continue,
-                ConfirmDefaultOption::Yes => return true,
-                ConfirmDefaultOption::No => return false,
+                ConfirmDefaultOption::Yes => ret!(true),
+                ConfirmDefaultOption::No => ret!(false),
             },
-            "y" => return true,
+            "y" => ret!(true),
             "n" => exit(1),
-            _ => return false,
+            _ => ret!(false),
         }
     }
 }

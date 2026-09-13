@@ -4,7 +4,7 @@ use std::{env, error, fs};
 
 use globset::Glob;
 
-use crate::utils::logging::{fail, fatal, verbose, warning};
+use crate::utils::logging::{fail, fatal, ok, verbose, warning};
 
 use crate::utils::scan_utils::{
     evil::scan_evil, hardcoded::scan_hardcoded, quality::scan_quality, secrets::scan_secrets,
@@ -41,7 +41,7 @@ pub fn scan_files(
             action(&full_path)?;
         }
     }
-    Ok(())
+    ok!()
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -188,7 +188,7 @@ pub fn scan_cwd(
 
         if is_excluded {
             verbose!("Skipped excluded file {}", rel);
-            return Ok(());
+            ok!()
         }
 
         verbose!("Processing absolute path: {}", full_abs);
@@ -219,7 +219,7 @@ pub fn scan_cwd(
                 verbose!("Skipping reading {}: {}", rel, e);
             }
         }
-        Ok(())
+        ok!()
     };
 
     scan_files(&mut action, &cwd_str.to_string())?;
@@ -232,7 +232,7 @@ pub fn scan_cwd(
     } else {
         println!("{}", "No issues found!".green().bold());
         verbose!("No issues found");
-        Ok(())
+        ok!()
     }
 }
 

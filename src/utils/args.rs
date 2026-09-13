@@ -7,7 +7,7 @@ use std::ops::Range;
 use std::path::Path;
 use std::{env, error};
 
-use clap::{ArgMatches, Command};
+use clap::ArgMatches;
 
 use crate::utils::command::get_root_command_object;
 use crate::utils::config::{
@@ -16,7 +16,7 @@ use crate::utils::config::{
 };
 use crate::utils::confirm::set_confirm_flag;
 use crate::utils::generate::{generate, str2enum};
-use crate::utils::logging::{enable_verbose, fatal, init_log_file, verbose, warning};
+use crate::utils::logging::{enable_verbose, fatal, init_log_file, ok, verbose, warning};
 use crate::utils::scan::scan_cwd;
 use crate::utils::version::VERSION;
 
@@ -25,41 +25,6 @@ use dirs::home_dir;
 use open::that;
 
 use owo_colors::OwoColorize;
-
-#[allow(unused)]
-#[derive(Debug)]
-/// Common flags, like -v --verbose.
-pub struct CommonFlags {
-    verbose: bool, // -v --verbose
-    confirm: bool, // -c --confirm
-}
-
-#[allow(unused)]
-impl CommonFlags {
-    /// Create new CommonFlags object.
-    pub fn new(verbose: bool, confirm: bool) -> Self {
-        Self { verbose, confirm }
-    }
-}
-
-#[allow(unused)]
-#[derive(Debug)]
-/// Several objects of command parsers.
-pub struct Parser<'a> {
-    /// Common flags
-    flags: &'a CommonFlags,
-    /// Root command
-    root: Command,
-}
-#[allow(unused)]
-impl<'a> Parser<'a> {
-    /// Create a new `Parser` object with specified CommonFlags object.
-    pub fn new(flags: &'a CommonFlags) -> Self {
-        let root = get_root_command_object();
-
-        Self { flags, root }
-    }
-}
 
 /// Open local documentation files of scrut.
 /// # Panics
@@ -76,7 +41,7 @@ pub fn open_local_docs() {
     println!(
         "{} {}",
         "Opening html page:".green(),
-        doc_path.to_str().unwrap()
+        doc_path.to_string_lossy().to_string()
     );
     verbose!("Opening html page: {}", doc_path.to_str().unwrap());
     if let Err(e) = that(doc_path.as_os_str()) {
@@ -156,7 +121,7 @@ pub fn parse_scan(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Error>>
             fatal!("Error when parsing argument `item`: {}", e);
         }
     };
-    Ok(())
+    ok!()
 }
 
 /// Parse given `ArgMatches` object and do generate.
@@ -211,16 +176,17 @@ pub fn parse_generate(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Err
 
     let item = str2enum(item, len, range_int, range_float, content);
     println!("{}", generate(item));
-    Ok(())
+    ok!()
 }
 
 /// Parse arguments and run their corresponding task.
 /// # Panics
 /// If no command provided or unknown command.
-pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
+pub fn parse_arg() -> Result<(), Box<dyn error::Error>> {
     let orig_dir = env::current_dir()?;
+    let root = get_root_command_object();
     // Parse
-    let matches = parser.root.clone().get_matches();
+    let matches = root.clone().get_matches();
 
     /* Set the config file.
      * Note: This initialization of the configuration system has
@@ -352,5 +318,5 @@ pub fn parse_arg(parser: Parser) -> Result<(), Box<dyn error::Error>> {
     // Change back to the original directory.
     env::set_current_dir(orig_dir)?;
 
-    Ok(())
+    ok!()
 }
