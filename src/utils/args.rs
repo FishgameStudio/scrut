@@ -48,7 +48,7 @@ pub fn print_log() {
         Some(path) => path,
         None => fatal!("Unable to get home directory"),
     };
-    let log_path = format!("{}/scrut.log", home.display());
+    let log_path = home.join("scrut.log").to_string_lossy().to_string();
     verbose!("Printing log from log file {}", log_path);
     match exists(&log_path) {
         Err(e) => {
@@ -74,7 +74,7 @@ pub fn print_log() {
 /// # Panics
 /// If failed to parse argument `-e --exclude`.
 /// # Errors
-/// If failed to scan current working directory.
+/// If failed to sjcan current working directory.
 pub fn parse_scan(sub_matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
     let scan_all = sub_matches.get_flag("scan-all");
     let exclude: Vec<String> = match sub_matches.try_get_many("exclude") {
@@ -228,7 +228,6 @@ pub fn parse_arg() -> Result<(), Box<dyn error::Error>> {
     }
 
     // Change to the specified directory.
-    env::set_current_dir(&config.work_dir)?;
     match matches.try_get_one::<String>("curr-dir") {
         Ok(Some(path)) => {
             // No threads spawned at this time,

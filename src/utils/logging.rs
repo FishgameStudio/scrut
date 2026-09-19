@@ -78,6 +78,9 @@ pub const MAX_LOG_BYTES: u64 = 15 * 1024 * 1024;
 /// }
 /// ```
 pub fn init_log_file(max_log_bytes: Option<u64>) -> io::Result<()> {
+    // DO NOT CALL ANYTHING USED LOGGING MACROS IN THIS ROOT SCOPE!
+    // This function brings a Mutex lock, and the logging macros also brings
+    // a Mutex lock. It will be stucked.
     let home = home_dir().ok_or(io::Error::new(
         io::ErrorKind::NotFound,
         "failed to get home directory",
@@ -105,7 +108,7 @@ pub fn init_log_file(max_log_bytes: Option<u64>) -> io::Result<()> {
             .open(log_path)?;
         *guard = Some(file);
     }
-    ok!()
+    Ok(())
 }
 
 /// Enable console verbose output, file logging is already active.
@@ -287,7 +290,7 @@ pub(crate) use fail;
 /// ```ignore
 /// use scrut::logging::ok;
 /// use std::error::Error;
-/// fn a() -> Result<(), Box<dyn Error>> {
+/// fn a() -> Result<&'static str, Box<dyn Error>> {
 ///     ok!("Succeeded")
 /// }
 /// ```
