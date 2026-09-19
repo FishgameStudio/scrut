@@ -8,7 +8,7 @@ name = "scrut"
 path = "src/main.rs"
 
 [lib]
-name = "scrutiny_rs"
+name = "scrut"
 
 [dependencies]
 chrono = "0.4.45"

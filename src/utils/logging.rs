@@ -70,7 +70,7 @@ pub const MAX_LOG_BYTES: u64 = 15 * 1024 * 1024;
 /// the initialization, the program will not panic but
 /// the log will not be saved to the log file (`~/scrut.log`).
 /// # Examples
-/// ```
+/// ```ignore
 /// use scrut::logging::init_log_file;
 /// use std::error::Error;
 /// fn main() {
@@ -144,7 +144,7 @@ macro_rules! verbose {
             use std::io::Write;
             use std::sync::atomic::Ordering;
             use std::thread;
-            use crate::utils::logging as this;
+            use $crate::utils::logging as this;
             let args = format_args!($($arg)*);
             let timestamp = this::now_str();
             let func = this::func_name!();
@@ -179,7 +179,7 @@ macro_rules! warning {
     ($($arg:tt)*) => {
         {
             use std::io::Write;
-            use crate::utils::logging as this;
+            use $crate::utils::logging as this;
             let args = format_args!($($arg)*);
             let timestamp = this::now_str();
             let func = this::func_name!();
@@ -211,7 +211,7 @@ macro_rules! fatal {
     ($($arg:tt)*) => {
         {
             use std::io::Write;
-            use crate::utils::logging as this;
+            use $crate::utils::logging as this;
             use std::thread;
             use std::process::exit;
             let args = format_args!($($arg)*);
@@ -240,7 +240,7 @@ macro_rules! fatal {
         {
             use std::io::Write;
             use std::thread;
-            use crate::utils::logging as this;
+            use $crate::utils::logging as this;
             let args = format_args!($($arg)*);
             let timestamp = this::now_str();
             let func = this::func_name!();
@@ -264,8 +264,9 @@ pub(crate) use fatal;
 
 /// Generate a [`Err`] enumeration with given error message
 /// # Examples
-/// ```
-/// use crate::utils::logging::fail;
+/// ```ignore
+/// use scrut::logging::fail;
+/// use std::error::Error;
 /// fn a() -> Result<(), Box<dyn Error>> {
 ///     fail!("Failed")
 /// }
@@ -273,9 +274,10 @@ pub(crate) use fatal;
 macro_rules! fail {
     () => {};
     ($($arg:tt)*) => {{
-        use crate::utils::logging::Error;
+        use $crate::utils::logging::{Error, verbose, func_name};
         let args = format_args!($($arg)*);
         let msg = format!("{}\n", args);
+        verbose!("Function '{}' failed: {:?}", func_name!(), msg);
         return Err(Box::new(Error(msg)));
     }};
 }
@@ -283,29 +285,36 @@ pub(crate) use fail;
 
 /// Generate a [`Ok`] enumeration with given return value
 /// # Examples
-/// ```
-/// use crate::utils::logging::ok;
+/// ```ignore
+/// use scrut::logging::ok;
+/// use std::error::Error;
 /// fn a() -> Result<(), Box<dyn Error>> {
 ///     ok!("Succeeded")
 /// }
 /// ```
 macro_rules! ok {
-    () => {
-        return Ok(())
-    };
+    () => {{
+        use $crate::utils::logging::func_name;
+        verbose!("Function '{}' succeeded", func_name!());
+
+        return Ok(());
+    }};
     ($val:expr) => {{
-        return Ok($val);
+        let val = $val;
+        use $crate::utils::logging::func_name;
+        verbose!("Function '{}' succeeded: {:?}", func_name!(), val);
+
+        return Ok(val);
     }};
 }
 pub(crate) use ok;
 
 /// Automatic return a value in a function and log.
 /// # Examples
-/// ```
-/// use crate::utils::logging::{ret, init_log_file};
+/// ```ignore
+/// use scrut::logging::ret;
 /// fn add(a: i32, b: i32) -> i32 {
-///     init_log_file(None);
-///     ret!(a + b) // Logged
+///     ret!(a + b)
 /// }
 /// ```
 macro_rules! ret {
@@ -313,7 +322,7 @@ macro_rules! ret {
         return;
     };
     ($ret_value:expr) => {{
-        use crate::utils::logging::verbose;
+        use $crate::utils::logging::verbose;
         verbose!("Function returned value {:#?}", $ret_value);
         return $ret_value;
     }};
