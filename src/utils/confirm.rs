@@ -40,7 +40,7 @@ pub fn confirm(prompt: &str, default_option: ConfirmDefaultOption) {
     verbose!(
         "Confirming choice, with prompt '{prompt}', with default_option '{default_option:?}' ..."
     );
-    print!(
+    let msg = format!(
         "{} {prompt} {}: ",
         "Confirm:".yellow().bold(),
         match default_option {
@@ -49,13 +49,15 @@ pub fn confirm(prompt: &str, default_option: ConfirmDefaultOption) {
             ConfirmDefaultOption::None => "(y/n)",
         }
     );
-    let mut buf = String::new();
     loop {
+        let mut buf = String::new();
+        eprint!("{msg}");
         // Read choice from stdin.
         if let Err(e) = io::stdin().read_line(&mut buf) {
             warning!("Failed to read stdin: {e}, retrying");
             continue;
         }
+        verbose!("Matching buf '{buf}' ...");
         match buf.to_lowercase().trim() {
             "" => match default_option {
                 ConfirmDefaultOption::None => continue,
@@ -65,40 +67,6 @@ pub fn confirm(prompt: &str, default_option: ConfirmDefaultOption) {
             "y" => break,
             "n" => exit(1),
             _ => continue,
-        }
-    }
-}
-/// Confirm action. Exit if entered `n`.
-#[inline]
-#[allow(dead_code)]
-pub fn confirm_noexit(prompt: &str, default_option: ConfirmDefaultOption) -> bool {
-    verbose!(
-        "Confirming choice, with prompt '{prompt}', with default_option '{default_option:?}' ..."
-    );
-    print!(
-        "{prompt} {}: ",
-        match default_option {
-            ConfirmDefaultOption::Yes => "(Y/n)",
-            ConfirmDefaultOption::No => "(y/N)",
-            ConfirmDefaultOption::None => "(y/n)",
-        }
-    );
-    let mut buf = String::new();
-    loop {
-        // Read choice from stdin.
-        if let Err(e) = io::stdin().read_line(&mut buf) {
-            warning!("Failed to read stdin: {e}, retrying");
-            continue;
-        }
-        match buf.to_lowercase().trim() {
-            "" => match default_option {
-                ConfirmDefaultOption::None => continue,
-                ConfirmDefaultOption::Yes => ret!(true),
-                ConfirmDefaultOption::No => ret!(false),
-            },
-            "y" => ret!(true),
-            "n" => exit(1),
-            _ => ret!(false),
         }
     }
 }

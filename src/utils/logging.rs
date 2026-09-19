@@ -154,7 +154,7 @@ macro_rules! verbose {
 
             // Print to console ONLY when verbose flag is on
             if this::VERBOSE_LOGGING.load(Ordering::Relaxed) {
-                print!("{} {}", this::purple!("Verbose:"), line);
+                eprint!("{} {}", this::purple!("Verbose:"), line);
             }
 
             // ALWAYS write to log file (if file handle exists)

@@ -72,7 +72,7 @@ pub fn generate(item: GenerationItemType) -> String {
                 const CHECKSUMS_FILE: &str = "./SHA256SUMS";
                 if get_confirm_flag() {
                     confirm(
-                        &format!("Save checksum content to file '{CHECKSUMS_FILE}'?'"),
+                        &format!("Save checksum content to file '{CHECKSUMS_FILE}'?"),
                         DefaultOpt::Yes,
                     )
                 }
