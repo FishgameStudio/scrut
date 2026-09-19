@@ -1,6 +1,6 @@
 //! Parse command-line arguments and run their corresponding task.
 //! Before initialization of log system, **do not** use log macros in [`crate::utils::logging`].
-//! Note: The log system is initialized by [`crate::utils::logging::init_log_file`].
+//! > Note: The log system is initialized by [`init_log_file`].
 
 use std::fs::{exists, read_to_string};
 use std::ops::Range;
@@ -26,24 +26,14 @@ use open::that;
 
 use owo_colors::OwoColorize;
 
-/// Resolve the local documentation target for the bundled docs site.
-pub fn resolve_docs_path() -> Result<PathBuf, Box<dyn error::Error>> {
-    let cwd = env::current_dir()?;
-    let path = cwd.join("docs").join("index.html");
-    if !path.is_file() {
-        return Err(format!("documentation file not found: {}", path.display()).into());
-    }
-    Ok(path)
-}
+const DOC_URL: &str = "https://fishgamestudio.github.io/scrut/docs/index.html";
+const ISSUE_PAGE: &str = "https://github.com/FishgameStudio/scrut/issues/new/choose";
 
 /// Open local documentation files of scrut.
 /// # Panics
 /// If unable to access the documentation files.
 pub fn open_local_docs() {
-    let doc_path = match resolve_docs_path() {
-        Ok(path) => path,
-        Err(e) => fatal!("Documentation html not found: {}", e),
-    };
+    let doc_path = PathBuf::from(DOC_URL);
     println!("{} {}", "Opening html page:".green(), doc_path.display());
     verbose!("Opening html page: {}", doc_path.display());
     if let Err(e) = that(&doc_path) {
@@ -275,7 +265,7 @@ pub fn parse_arg() -> Result<(), Box<dyn error::Error>> {
             // Command `scan`
             parse_scan(sub_matches)?;
         }
-        #[allow(unused)]
+        #[allow(unused_variables)]
         Some(("fix", sub_matches)) => {
             // Command `fix`
             todo!("Implement command `fix`")
@@ -309,21 +299,25 @@ pub fn parse_arg() -> Result<(), Box<dyn error::Error>> {
             Some((cmd, _)) => fatal!("Unknown sub command: '{cmd}'"),
             None => fatal!("Must provide a sub command of the command `config`"),
         },
-        None => fatal!("Must provide a command"),
+        #[allow(unused_variables)]
+        Some(("baseline", sub_matches)) => {
+            todo!();
+        }
+        Some(("bug-report", _)) => {
+            // Open the issue page of the GitHub repo.
+            verbose!("Opening issue page '{ISSUE_PAGE}' ...");
+            println!("{} {}", "Opening page:".green(), ISSUE_PAGE);
+            if let Err(e) = that(ISSUE_PAGE) {
+                fatal!("Failed to open page: {e}");
+            }
+            verbose!("Done");
+        }
         Some((cmd, _)) => fatal!("Unknown command: {}", cmd),
+        None => fatal!("Must provide a command"),
     }
 
     // Change back to the original directory.
     env::set_current_dir(orig_dir)?;
 
     ok!()
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn docs_path_uses_workspace_docs_file() {
-        let path = super::resolve_docs_path().unwrap();
-        assert!(path.ends_with("docs/index.html"));
-    }
 }

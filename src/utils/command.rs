@@ -76,9 +76,33 @@ pub(crate) fn get_root_command_object() -> Command {
                 .long("scan-all")
                 .help("Scan all files in current working directory")
                 .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("staged") // TODO: Implement this argument
+                .long("staged")
+                .short('s')
+                .help("Only scan staged files.")
+                .required(false)
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("changed") // TODO: Implement this argument
+                .long("changed")
+                .short('c')
+                .help("Only scan changed files.")
+                .required(false)
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("baseline") // TODO: Implement this argument
+                .long("baseline")
+                .short('b')
+                .required(false)
+                .value_name("File")
+                .help("Specify baseline. The issues stored in the baseline won't be notified."),
         );
 
-    let fix = Command::new("fix")
+    let fix = Command::new("fix") // TODO: Implement this command
         .about("Fix known issues in specified files")
         .arg(
             Arg::new("item") // Positional argument
@@ -91,6 +115,14 @@ pub(crate) fn get_root_command_object() -> Command {
                 .long("fix-unsafe") // No short names
                 .help("Fix issues may modify code behavior.")
                 .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("baseline")
+                .long("baseline")
+                .short('b')
+                .required(false)
+                .value_name("File")
+                .help("Specify baseline. The issues stored in the baseline won't be fixed."),
         );
 
     let generate = Command::new("generate")
@@ -170,6 +202,18 @@ pub(crate) fn get_root_command_object() -> Command {
         .subcommand(&config_set)
         .subcommand(&config_init);
 
+    let baseline = Command::new("baseline")
+        .about("Create a baseline for this project")
+        .arg(
+            Arg::new("output")
+                .long("output")
+                .short('o')
+                .required(false)
+                .help("Set the output of the baseline configuration. Default `baseline.json`")
+                .value_name("File"),
+        );
+    let bug_report = Command::new("bug-report").about("Report a bug to the GitHub repository");
+
     // Bind subcommands.
 
     root.subcommand(&version)
@@ -179,4 +223,6 @@ pub(crate) fn get_root_command_object() -> Command {
         .subcommand(&log)
         .subcommand(&generate)
         .subcommand(&config_root)
+        .subcommand(&baseline)
+        .subcommand(&bug_report)
 }
