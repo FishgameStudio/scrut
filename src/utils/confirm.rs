@@ -40,9 +40,9 @@ pub fn confirm(prompt: &str, default_option: ConfirmDefaultOption) {
     verbose!(
         "Confirming choice, with prompt '{prompt}', with default_option '{default_option:?}' ..."
     );
-    println!(
+    print!(
         "{} {prompt} {}: ",
-        "Confirm: ".yellow().bold(),
+        "Confirm:".yellow().bold(),
         match default_option {
             ConfirmDefaultOption::Yes => "(Y/n)",
             ConfirmDefaultOption::No => "(y/N)",
@@ -75,7 +75,7 @@ pub fn confirm_noexit(prompt: &str, default_option: ConfirmDefaultOption) -> boo
     verbose!(
         "Confirming choice, with prompt '{prompt}', with default_option '{default_option:?}' ..."
     );
-    println!(
+    print!(
         "{prompt} {}: ",
         match default_option {
             ConfirmDefaultOption::Yes => "(Y/n)",
