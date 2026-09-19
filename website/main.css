@@ -1,0 +1,196 @@
+/* Stylesheet for index.html. (Dark) */
+:root {
+    --bg: #1c1a17;
+    --bg-card: #292520;
+    --text: #e9e2d5;
+    --nav-bg: #5c3418;
+    --nav-text: #fff0d8;
+    --accent: #d15454;
+    --accent-light: #e87878;
+    --border: #4a4338;
+    --code-bg: #141210;
+    --code-text: #f0e6d2;
+    --inline-code-bg: rgba(209, 84, 84, 0.15);
+    --faq-border: #b48b44;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: var(--text);
+}
+
+body {
+    margin: 40px;
+    margin-top: 0px;
+    background: var(--bg);
+    line-height: 1.7;
+}
+
+nav {
+    background: var(--nav-bg);
+    padding: 12px 15px;
+    border-radius: 6px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+    margin-bottom: 2rem;
+}
+
+nav * {
+    margin: 10px;
+}
+
+nav a {
+    color: var(--nav-text);
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+nav a:hover {
+    color: #ffc970;
+}
+
+code {
+    /* Inline codes */
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 15px;
+    background: var(--inline-code-bg);
+    color: var(--accent);
+    margin: 0 2px;
+    border-radius: 3px;
+    padding: 2px 5px;
+}
+
+pre {
+    /* Code blocks */
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 15px;
+    background: var(--code-bg);
+    color: var(--code-text);
+    margin: 1rem 0;
+    border-radius: 6px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    /* Titles */
+    margin: 1.2em 0 0.6em 0;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: var(--accent);
+    letter-spacing: 0.015em;
+}
+
+h1 {
+    font-size: 2.8em;
+}
+
+h2 {
+    font-size: 2em;
+}
+
+h3 {
+    font-size: 1.6em;
+}
+
+h4 {
+    font-size: 1.3em;
+}
+
+h5 {
+    font-size: 1.1em;
+}
+
+h6 {
+    font-size: 1em;
+}
+
+hr {
+    /* Dividing line */
+    border: 0;
+    height: 2px;
+    background: var(--border);
+    margin: 1.5em 0;
+    border-radius: 2px;
+}
+
+a {
+    /* Links */
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: var(--accent);
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--accent-light);
+}
+
+summary::after {
+    content: "?";
+    color: #ff5c5c;
+    margin-left: 6px;
+}
+
+.faq,
+.ref {
+    margin: 8px 0 8px 22px;
+    background-color: var(--bg-card);
+    border-left: 4px solid var(--faq-border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade {
+    opacity: 0;
+}
+
+.fade.visible {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.row {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.row>.col {
+    flex: 1;
+}
+
+.row>.col-fixed {
+    width: 300px;
+}
+
+@media (max-width:720px) {
+    .row {
+        flex-direction: column;
+    }
+}

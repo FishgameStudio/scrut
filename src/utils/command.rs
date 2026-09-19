@@ -1,0 +1,228 @@
+//! A private module to store the [`Command`] object.
+//! To get the object, please call the function [`get_root_command_object``]
+//! To see how it works, please see the [documentation](../../docs/index.html).
+
+use clap::{self, Arg, Command, value_parser};
+
+/// Get the main [`Command`] object for command-line parsing.
+pub(crate) fn get_root_command_object() -> Command {
+    // Root command
+    let root = Command::new("scrut")
+        .arg(
+            Arg::new("verbose")
+                .short('v')
+                .long("verbose")
+                .help("Enable verbose logging")
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("confirm")
+                .short('c')
+                .long("confirm")
+                .help("Confirm before actions")
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("max-log-size")
+                .long("max-log-size")
+                .value_name("MiB")
+                .help("Specify maximum size (MiB) of the log file.")
+                .required(false)
+                .value_parser(clap::value_parser!(u64)),
+        )
+        .arg(
+            Arg::new("config-file")
+                .long("config-file")
+                .value_name("File")
+                .help("Specify the path of the configuration file.")
+                .required(false),
+        )
+        .arg(
+            Arg::new("curr-dir")
+                .long("curr-dir")
+                .short('C') // Uppercase C
+                .value_name("Directory")
+                .help("Specify the directory in which scrut runs.")
+                .required(false),
+        );
+
+    let version = Command::new("version").about("Show current version of scrut");
+
+    let docs = Command::new("docs").about("Open web page of Scrut Docs with default browser");
+
+    let log = Command::new("log").about("Print contents of the log file");
+
+    let scan = Command::new("scan")
+        .about("Scan issues in specified files")
+        .arg(
+            Arg::new("item") // Positional argument
+                .help("Specify items to scan")
+                .required(false)
+                .value_name("Item")
+                .num_args(1..), // One or more
+        )
+        .arg(
+            Arg::new("exclude")
+                .value_name("Glob-pattern")
+                .short('e')
+                .long("exclude")
+                .help("Specify excluded files")
+                .required(false)
+                .num_args(0..),
+        )
+        .arg(
+            Arg::new("scan-all")
+                .short('a')
+                .long("scan-all")
+                .help("Scan all files in current working directory")
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("staged") // TODO: Implement this argument
+                .long("staged")
+                .short('s')
+                .help("Only scan staged files.")
+                .required(false)
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("changed") // TODO: Implement this argument
+                .long("changed")
+                .short('c')
+                .help("Only scan changed files.")
+                .required(false)
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("baseline") // TODO: Implement this argument
+                .long("baseline")
+                .short('b')
+                .required(false)
+                .value_name("File")
+                .help("Specify baseline. The issues stored in the baseline won't be notified."),
+        );
+
+    let fix = Command::new("fix") // TODO: Implement this command
+        .about("Fix known issues in specified files")
+        .arg(
+            Arg::new("item") // Positional argument
+                .value_name("Item")
+                .help("Specify items to fix")
+                .required(false), // Fix all issues in default.
+        )
+        .arg(
+            Arg::new("fix-unsafe")
+                .long("fix-unsafe") // No short names
+                .help("Fix issues may modify code behavior.")
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("baseline")
+                .long("baseline")
+                .short('b')
+                .required(false)
+                .value_name("File")
+                .help("Specify baseline. The issues stored in the baseline won't be fixed."),
+        );
+
+    let generate = Command::new("generate")
+        .about("Generate specified items")
+        .alias("gen")
+        .arg(
+            // Potisional argument to specify item.
+            Arg::new("item")
+                .help("A positional argument to specify item to generate.")
+                .value_name("Item")
+                .required(true),
+        )
+        .arg(
+            Arg::new("len")
+                .long("len")
+                .short('l')
+                .help("Specify length of the password, if the item is `password`.")
+                .value_parser(value_parser!(usize))
+                .value_name("Length")
+                .required(false),
+        )
+        .arg(
+            Arg::new("range")
+                .long("range")
+                .short('r')
+                .help("Specify range of the random number, if the item is `rand*`.")
+                .required(false)
+                .value_parser(value_parser!(f64))
+                .value_names(["Start", "End"])
+                .num_args(2), // Two argument: --range <Start> <End>
+        )
+        .arg(
+            Arg::new("content")
+                .long("content")
+                .short('c')
+                .help("Specify content to generate SHA256 if the item is `sha256`.")
+                .value_name("String")
+                .required(false),
+        )
+        .arg(
+            Arg::new("from-file")
+                .long("from-file")
+                .visible_alias("file")
+                .value_name("File")
+                .help("Specify content from a valid file.")
+                .required(false),
+        );
+
+    let config_print = Command::new("print")
+        .about("Print the raw content of the main config file (~/.scrut/config.toml).");
+    let config_show =
+        Command::new("show").about("Show the prettily formatted structure of the config file.");
+    let config_set = Command::new("set") 
+    .about("Modify the config file with the given key and value.")
+    .arg(
+        Arg::new("attr") // Positional
+            .required(true)
+            .num_args(2)
+            .value_names(["Key", "Value"])
+            .help("Specify a key and a corresponding value, and apply the attribute to the config file."),
+    );
+    let config_init = Command::new("init")
+        .about("Initialize the configuration system.")
+        .arg(
+            Arg::new("forcibly")
+                .long("forcibly")
+                .short('f')
+                .required(false)
+                .help("Forcibly reinitialize the configuration system.")
+                .action(clap::ArgAction::SetTrue),
+        );
+
+    let config_root = Command::new("config")
+        .about("Manage configuration of scrut")
+        .subcommand(&config_print)
+        .subcommand(&config_show)
+        .subcommand(&config_set)
+        .subcommand(&config_init);
+
+    let baseline = Command::new("baseline")
+        .about("Create a baseline for this project")
+        .arg(
+            Arg::new("output")
+                .long("output")
+                .short('o')
+                .required(false)
+                .help("Set the output of the baseline configuration. Default `baseline.json`")
+                .value_name("File"),
+        );
+    let bug_report = Command::new("bug-report").about("Report a bug to the GitHub repository");
+
+    // Bind subcommands.
+
+    root.subcommand(&version)
+        .subcommand(&scan)
+        .subcommand(&fix)
+        .subcommand(&docs)
+        .subcommand(&log)
+        .subcommand(&generate)
+        .subcommand(&config_root)
+        .subcommand(&baseline)
+        .subcommand(&bug_report)
+}
