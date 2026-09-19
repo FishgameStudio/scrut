@@ -4,7 +4,7 @@
 
 use std::fs::{exists, read_to_string};
 use std::ops::Range;
-use std::path::Path;
+use std::path::PathBuf;
 use std::{env, error};
 
 use clap::ArgMatches;
@@ -26,30 +26,28 @@ use open::that;
 
 use owo_colors::OwoColorize;
 
+/// Resolve the local documentation target for the bundled docs site.
+pub fn resolve_docs_path() -> Result<PathBuf, Box<dyn error::Error>> {
+    let cwd = env::current_dir()?;
+    let path = cwd.join("docs").join("index.html");
+    if !path.is_file() {
+        return Err(format!("documentation file not found: {}", path.display()).into());
+    }
+    Ok(path)
+}
+
 /// Open local documentation files of scrut.
 /// # Panics
 /// If unable to access the documentation files.
 pub fn open_local_docs() {
-    let doc_path = Path::new("https://fishgamestudio.github.com/scrut/docs/index.html")
-        .canonicalize()
-        .unwrap();
-    match exists(&doc_path) {
-        Ok(true) => {}
-        Ok(false) => fatal!("Documentation html not found"),
-        Err(e) => fatal!("Unable to access documentation html: {}", e),
-    }
-    println!(
-        "{} {}",
-        "Opening html page:".green(),
-        doc_path.to_string_lossy()
-    );
-    verbose!("Opening html page: {}", doc_path.to_str().unwrap());
-    if let Err(e) = that(doc_path.as_os_str()) {
-        fatal!(
-            "Unable to open html page {}: {}",
-            doc_path.to_str().unwrap(),
-            e
-        );
+    let doc_path = match resolve_docs_path() {
+        Ok(path) => path,
+        Err(e) => fatal!("Documentation html not found: {}", e),
+    };
+    println!("{} {}", "Opening html page:".green(), doc_path.display());
+    verbose!("Opening html page: {}", doc_path.display());
+    if let Err(e) = that(&doc_path) {
+        fatal!("Unable to open html page {}: {}", doc_path.display(), e);
     }
 }
 /// Print log from the log file. The path of log is `~/scrut.log` on by default.
@@ -319,4 +317,13 @@ pub fn parse_arg() -> Result<(), Box<dyn error::Error>> {
     env::set_current_dir(orig_dir)?;
 
     ok!()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn docs_path_uses_workspace_docs_file() {
+        let path = super::resolve_docs_path().unwrap();
+        assert!(path.ends_with("docs/index.html"));
+    }
 }

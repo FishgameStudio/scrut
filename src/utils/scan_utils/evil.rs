@@ -35,9 +35,8 @@ pub static RULES: Lazy<Vec<Rule>> = Lazy::new(|| {
     ]
 });
 
-pub fn scan_evil(s: &String, filename: &String) -> i32 {
+pub fn scan_evil(s: &str, filename: &str) -> i32 {
     let mut total_error: i32 = 0;
-    let filename = filename.as_str();
     for rule in &*RULES {
         total_error += diagnostic_by_regex(rule, s, filename);
     }

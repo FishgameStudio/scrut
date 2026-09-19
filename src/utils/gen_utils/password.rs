@@ -1,5 +1,3 @@
-//! Generates passwords.
-
 use rand::{self, RngExt};
 
 use crate::utils::logging::verbose;

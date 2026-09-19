@@ -40,8 +40,7 @@ pub static RULES: Lazy<Vec<Rule>> = Lazy::new(|| {
 });
 
 /// Scan personal informations and secrets in file contents.
-pub fn scan_secrets(s: &String, filename: &String) -> i32 {
-    let filename = filename.as_str();
+pub fn scan_secrets(s: &str, filename: &str) -> i32 {
     let mut total_error = 0;
     for rule in &*RULES {
         total_error += diagnostic_by_regex(rule, s, filename);

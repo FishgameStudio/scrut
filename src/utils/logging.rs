@@ -14,7 +14,6 @@ use dirs::home_dir;
 
 ////// Scrut's own error type //////
 
-///
 #[derive(Debug)]
 pub struct Error(pub String);
 impl std::error::Error for Error {}
